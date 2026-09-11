@@ -26,7 +26,12 @@
       </div>
     </div>
     
-    <div class="header-status-bar">
+      <a href="https://github.com/laisiff-dev/WAER-AI-SYTEM" target="_blank" class="status-badge" style="text-decoration: none; color: #fff; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">
+        <i class="fa-brands fa-github"></i> <span>GitHub 專案</span>
+      </a>
+      <a href="https://laisiff-dev.github.io/WAER-AI-SYTEM/" target="_blank" class="status-badge" style="text-decoration: none; color: var(--primary-cyan); background: rgba(0, 242, 254, 0.15); border-color: var(--primary-cyan);">
+        <i class="fa-solid fa-globe"></i> <span>GitHub Pages 線上版</span>
+      </a>
       <div class="status-badge">
         <div class="dot-indicator" id="wifi-status-dot"></div>
         <span>DO4 Smart Box Wi-Fi: <strong id="wifi-status-text">已連線</strong></span>
@@ -58,6 +63,9 @@
     </button>
     <button class="nav-tab" data-tab="tab-reports">
       <i class="fa-solid fa-file-pdf"></i> 長期數據整理與法定報表
+    </button>
+    <button class="nav-tab" data-tab="tab-chlorine-game">
+      <i class="fa-solid fa-gamepad text-cyan"></i> 加氯 / 減氯水質控制互動遊戲
     </button>
   </nav>
 
@@ -728,7 +736,411 @@
           </div>
         </div>
 
+    <!-- ============================================================
+         Tab 6: 加氯 / 減氯水質控制互動遊戲
+         ============================================================ -->
+    <div id="tab-chlorine-game" class="tab-panel">
+      
+      <!-- 遊戲頂部狀態列與模式選擇 -->
+      <div class="card game-header-card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(14, 165, 233, 0.15)); border: 1px solid var(--primary-cyan);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.3rem;">
+              <span class="status-badge" style="background: rgba(0, 242, 254, 0.2); color: var(--primary-cyan); font-weight: bold; border-color: var(--primary-cyan);">
+                <i class="fa-solid fa-gamepad"></i> PBL 互動化學實驗室
+              </span>
+              <h2 style="font-size: 1.4rem; color: #fff; margin: 0;">加氯 / 減氯水質控制動態模擬遊戲</h2>
+            </div>
+            <p style="font-size: 0.85rem; color: #94a3b8;">
+              動態控制次氯酸鈉 (<strong style="color:#38bdf8;">NaOCl 加氯</strong>) 與亞硫酸氫鈉 (<strong style="color:#34d399;">NaHSO₃ 減氯中和</strong>)，應對有機物干擾，將自由有效餘氯精準維持於法規標準 (0.2 ~ 1.0 mg/L)！
+            </p>
+          </div>
+
+          <!-- 遊戲指標與控制按鈕 -->
+          <div style="display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;">
+            <div class="game-stat-box" style="background: rgba(0,0,0,0.4); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+              <div style="font-size: 0.7rem; color: #94a3b8;">模式 / 狀態</div>
+              <div style="font-size: 0.95rem; font-weight: 700; color: var(--primary-cyan);" id="cg-mode-text">自由動態沙盒</div>
+            </div>
+
+            <div class="game-stat-box" style="background: rgba(0,0,0,0.4); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+              <div style="font-size: 0.7rem; color: #94a3b8;">關卡時間</div>
+              <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-amber); font-family: var(--font-code);" id="cg-timer-display">-- s</div>
+            </div>
+
+            <div class="game-stat-box" style="background: rgba(0,0,0,0.4); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+              <div style="font-size: 0.7rem; color: #94a3b8;">目前得分</div>
+              <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); font-family: var(--font-code);" id="cg-score-display">100</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 闖關關卡選擇列 -->
+        <div style="margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center;">
+          <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;"><i class="fa-solid fa-trophy text-amber"></i> 選擇 PBL 闖關任務：</span>
+          <button class="industrial-btn cyan" id="btn-cg-quest-1" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-cloud-showers-heavy"></i> 關卡 1：暴雨有機物過高緊急處置
+          </button>
+          <button class="industrial-btn amber" id="btn-cg-quest-2" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-triangle-exclamation"></i> 關卡 2：加藥泵過度加氯中和救援
+          </button>
+          <button class="industrial-btn green" id="btn-cg-quest-3" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-award"></i> 關卡 3：60秒動態流量恆定大考驗
+          </button>
+          <button class="industrial-btn" id="btn-cg-sandbox" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(255,255,255,0.1); color: #fff;">
+            <i class="fa-solid fa-rotate-left"></i> 切回自由沙盒
+          </button>
+        </div>
       </div>
+
+      <!-- 遊戲核心雙欄布局：左側 SVG 動態化學反應器與即時控制，右側即時數據與 Chart.js 趨勢圖 -->
+      <div class="dashboard-grid">
+        
+        <!-- 左欄：SVG 化學反應槽動畫與控制面板 -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="card-header" style="margin-bottom: 0.5rem;">
+            <div class="card-title">
+              <i class="fa-solid fa-vial-circle-check text-cyan"></i> 雙向加減氯反應器 (Interactive Chemical Reactor Engine)
+            </div>
+            <span class="badge-status green" id="cg-status-badge">水質法規合規</span>
+          </div>
+
+          <!-- SVG 化學反應器畫布 -->
+          <div class="scada-hmi-container" style="background: #090d16; border-radius: 10px; border: 1px solid var(--border-color); padding: 0.5rem; position: relative;">
+            <svg class="scada-diagram" viewBox="0 0 1000 450" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="cgWaterNormal" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop id="cg-grad-stop1" offset="0%" stop-color="#0284c7" stop-opacity="0.75"/>
+                  <stop id="cg-grad-stop2" offset="100%" stop-color="#0369a1" stop-opacity="0.9"/>
+                </linearGradient>
+                <linearGradient id="cgNaOClGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#0284c7" stop-opacity="0.9"/>
+                </linearGradient>
+                <linearGradient id="cgNaHSO3Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#34d399" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#059669" stop-opacity="0.9"/>
+                </linearGradient>
+              </defs>
+
+              <rect x="0" y="0" width="1000" height="450" fill="#0b1120" rx="10"/>
+
+              <!-- 左側：次氯酸鈉 (NaOCl) 儲藥桶與加藥泵 -->
+              <g transform="translate(40, 40)">
+                <rect x="0" y="0" width="130" height="150" fill="url(#cgNaOClGrad)" rx="8" stroke="#38bdf8" stroke-width="2"/>
+                <rect x="10" y="10" width="110" height="24" fill="rgba(15,23,42,0.7)" rx="4"/>
+                <text x="65" y="27" font-family="Outfit" font-size="12" font-weight="bold" fill="#38bdf8" text-anchor="middle">NaOCl 儲藥桶</text>
+                <text x="65" y="45" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">次氯酸鈉 (12%)</text>
+                
+                <!-- 泵浦與管道 -->
+                <circle cx="65" cy="180" r="22" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+                <path d="M 55 170 L 75 190 M 75 170 L 55 190" stroke="#38bdf8" stroke-width="2" id="anim-cg-pump-naocl"/>
+                <text x="65" y="215" font-family="Outfit" font-size="11" fill="#38bdf8" text-anchor="middle" font-weight="bold">NaOCl 加藥泵</text>
+                <path d="M 65 202 L 65 280 L 260 280" fill="none" stroke="#38bdf8" stroke-width="4" stroke-dasharray="6,4"/>
+
+                <!-- 加藥滴滴動畫 -->
+                <circle id="droplet-naocl" cx="260" cy="280" r="5" fill="#38bdf8" class="drop-anim"/>
+              </g>
+
+              <!-- 右側：亞硫酸氫鈉 (NaHSO3) 減氯劑桶與中和泵 -->
+              <g transform="translate(830, 40)">
+                <rect x="0" y="0" width="130" height="150" fill="url(#cgNaHSO3Grad)" rx="8" stroke="#34d399" stroke-width="2"/>
+                <rect x="10" y="10" width="110" height="24" fill="rgba(15,23,42,0.7)" rx="4"/>
+                <text x="65" y="27" font-family="Outfit" font-size="12" font-weight="bold" fill="#34d399" text-anchor="middle">NaHSO₃ 脫氯桶</text>
+                <text x="65" y="45" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">亞硫酸氫鈉 (中和)</text>
+
+                <!-- 泵浦與管道 -->
+                <circle cx="65" cy="180" r="22" fill="#1e293b" stroke="#34d399" stroke-width="2"/>
+                <path d="M 55 170 L 75 190 M 75 170 L 55 190" stroke="#34d399" stroke-width="2" id="anim-cg-pump-nahso3"/>
+                <text x="65" y="215" font-family="Outfit" font-size="11" fill="#34d399" text-anchor="middle" font-weight="bold">NaHSO₃ 減氯泵</text>
+                <path d="M 65 202 L 65 280 L -110 280" fill="none" stroke="#34d399" stroke-width="4" stroke-dasharray="6,4"/>
+
+                <!-- 中和滴滴動畫 -->
+                <circle id="droplet-nahso3" cx="720" cy="280" r="5" fill="#34d399" class="drop-anim"/>
+              </g>
+
+              <!-- 中央：原水進水管道 -->
+              <g transform="translate(420, 20)">
+                <rect x="0" y="0" width="160" height="30" fill="#1e293b" stroke="#64748b" stroke-width="2" rx="4"/>
+                <text x="80" y="20" font-family="Outfit" font-size="12" fill="#cbd5e1" font-weight="bold" text-anchor="middle">原水進流 (Raw Water)</text>
+                <path d="M 80 30 L 80 120" stroke="#0284c7" stroke-width="8" id="cg-inflow-pipe"/>
+              </g>
+
+              <!-- 中央核心：動態反應混合槽 (Reaction Tank) -->
+              <g transform="translate(250, 120)">
+                <rect id="cg-tank-water" x="0" y="0" width="500" height="260" fill="url(#cgWaterNormal)" stroke="#00f2fe" stroke-width="3" rx="12"/>
+                <rect x="0" y="0" width="500" height="30" fill="rgba(15,23,42,0.7)"/>
+                <text x="250" y="21" font-family="Outfit" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">加氯 / 減氯化學混合反應槽 (Disinfection Tank)</text>
+
+                <!-- 攪拌機動態 (Mixer Impeller) -->
+                <rect x="245" y="30" width="10" height="140" fill="#64748b"/>
+                <g id="cg-mixer-blades" transform="translate(250, 170)">
+                  <ellipse cx="0" cy="0" rx="45" ry="10" fill="#38bdf8" opacity="0.8"/>
+                </g>
+
+                <!-- 電極探針 1: DPD 餘氯/ORP 探針 -->
+                <rect x="80" y="60" width="16" height="120" fill="#334155" rx="3"/>
+                <rect x="74" y="180" width="28" height="30" fill="#00f2fe" rx="4"/>
+                <text x="88" y="225" font-family="Outfit" font-size="10" fill="#00f2fe" font-weight="bold" text-anchor="middle">Cl₂ / ORP 探針</text>
+                <text x="88" y="240" font-family="Outfit" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle" id="cg-svg-chlorine-val">0.58 mg/L</text>
+
+                <!-- 電極探針 2: pH 探針 -->
+                <rect x="400" y="60" width="16" height="120" fill="#334155" rx="3"/>
+                <rect x="394" y="180" width="28" height="30" fill="#10b981" rx="4"/>
+                <text x="408" y="225" font-family="Outfit" font-size="10" fill="#10b981" font-weight="bold" text-anchor="middle">pH 探針</text>
+                <text x="408" y="240" font-family="Outfit" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle" id="cg-svg-ph-val">7.35 pH</text>
+
+                <!-- 反應槽內氣泡與水流波動粒子 -->
+                <circle cx="180" cy="200" r="4" fill="#ffffff" class="air-bubble-pulse"/>
+                <circle cx="320" cy="190" r="5" fill="#ffffff" class="air-bubble-pulse"/>
+                <circle cx="220" cy="140" r="3" fill="#ffffff" class="air-bubble-pulse"/>
+              </g>
+
+              <!-- 右下方：清水出水閥 -->
+              <g transform="translate(750, 340)">
+                <path d="M 0 40 L 100 40 L 100 90" fill="none" stroke="#06b6d4" stroke-width="8"/>
+                <text x="50" y="30" font-family="Outfit" font-size="11" fill="#06b6d4" font-weight="bold" text-anchor="middle">淨化出水至清水池</text>
+              </g>
+            </svg>
+          </div>
+
+          <!-- 即時控制面板與動態滑桿 -->
+          <div style="margin-top: 1rem; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 10px; border: 1px solid var(--border-color);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 0.8rem;">
+              
+              <!-- NaOCl 加藥泵滑桿 -->
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                  <label style="font-size: 0.85rem; color: #38bdf8; font-weight: 700;">
+                    <i class="fa-solid fa-plus-circle"></i> 次氯酸鈉 NaOCl 加藥量：
+                  </label>
+                  <span style="font-family: var(--font-code); font-size: 0.95rem; font-weight: 800; color: #38bdf8;" id="cg-val-naocl-rate">35 mL/min</span>
+                </div>
+                <input type="range" id="cg-slider-naocl" min="0" max="100" value="35" style="width: 100%; accent-color: #38bdf8; cursor: pointer;">
+              </div>
+
+              <!-- NaHSO3 減氯泵滑桿 -->
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                  <label style="font-size: 0.85rem; color: #34d399; font-weight: 700;">
+                    <i class="fa-solid fa-minus-circle"></i> 亞硫酸氫鈉 NaHSO₃ 中和量：
+                  </label>
+                  <span style="font-family: var(--font-code); font-size: 0.95rem; font-weight: 800; color: #34d399;" id="cg-val-nahso3-rate">0 mL/min</span>
+                </div>
+                <input type="range" id="cg-slider-nahso3" min="0" max="100" value="0" style="width: 100%; accent-color: #34d399; cursor: pointer;">
+              </div>
+
+            </div>
+
+            <!-- 原水流量與有機物負擔控制 -->
+            <div style="display: flex; gap: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 200px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                  <span style="font-size: 0.8rem; color: #94a3b8;">原水進水流量 (Inflow):</span>
+                  <span style="font-family: var(--font-code); font-size: 0.85rem; color: #fff;" id="cg-val-inflow">50 L/min</span>
+                </div>
+                <input type="range" id="cg-slider-inflow" min="10" max="100" value="50" style="width: 100%; accent-color: #06b6d4;">
+              </div>
+
+              <div>
+                <button class="industrial-btn red" id="btn-cg-toggle-organic" style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+                  <i class="fa-solid fa-cloud-rain"></i> 觸發暴雨有機物飆升 (Spike Organic Demand)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右欄：即時水質監測卡與 Chart.js 2D 動態趨勢圖 -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          
+          <!-- 水質指標卡 4 連抽 -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+            
+            <div class="metric-card green" id="card-cg-chlorine">
+              <div class="metric-label">自由有效餘氯 Free Cl₂</div>
+              <div class="metric-value" id="cg-metric-chlorine">0.58 <span class="metric-unit">mg/L</span></div>
+              <div class="metric-sub" id="cg-sub-chlorine">法規合格 (0.2 ~ 1.0 mg/L)</div>
+            </div>
+
+            <div class="metric-card cyan" id="card-cg-orp">
+              <div class="metric-label">氧化還原電位 ORP</div>
+              <div class="metric-value" id="cg-metric-orp">710 <span class="metric-unit">mV</span></div>
+              <div class="metric-sub" id="cg-sub-orp">極佳消毒能力 (> 650mV)</div>
+            </div>
+
+            <div class="metric-card purple" id="card-cg-thm">
+              <div class="metric-label">THMs 消毒副產物風險</div>
+              <div class="metric-value" id="cg-metric-thm">8 <span class="metric-unit">ppb</span></div>
+              <div class="metric-sub" id="cg-sub-thm">安全標準 (&lt; 80 ppb)</div>
+            </div>
+
+            <div class="metric-card green" id="card-cg-pathogen">
+              <div class="metric-label">大腸桿菌與病原防護</div>
+              <div class="metric-value" id="cg-metric-pathogen">99.99 <span class="metric-unit">%</span></div>
+              <div class="metric-sub" id="cg-sub-pathogen">完全滅菌防護</div>
+            </div>
+
+          </div>
+
+          <!-- Chart.js 動態趨勢圖卡片 -->
+          <div class="card" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="card-header" style="margin-bottom: 0.5rem;">
+              <div class="card-title">
+                <i class="fa-solid fa-chart-line text-cyan"></i> 即時水質與加/減氯反應動態曲線
+              </div>
+              <span style="font-size: 0.75rem; color: #94a3b8;">每秒動態刷新</span>
+            </div>
+
+            <div style="position: relative; height: 210px; width: 100%;">
+              <canvas id="chartChlorineGame"></canvas>
+            </div>
+
+            <!-- 綠色法規區間標示說明 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #94a3b8; background: rgba(0,0,0,0.2); padding: 0.4rem 0.8rem; border-radius: 6px; margin-top: 0.5rem;">
+              <div><i class="fa-solid fa-square text-green"></i> 法規目標區間：0.2 ~ 1.0 mg/L</div>
+              <div><i class="fa-solid fa-square text-cyan"></i> 最佳平衡目標：0.5 ~ 0.8 mg/L</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- 化學反應原理與不同 pH 物種分佈互動實驗室 (Disinfection Chemistry & pH Speciation Simulator) -->
+      <div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(139, 92, 246, 0.1)); border: 1px solid var(--accent-purple);">
+        <div class="card-header" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.8rem; margin-bottom: 1.2rem;">
+          <div class="card-title">
+            <i class="fa-solid fa-atom text-purple" style="font-size: 1.2rem;"></i> 水務化學原理：氯氣 / 次氯酸鈉反應與 pH 物種分佈動態實驗室
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button class="industrial-btn purple" id="btn-ph-challenge" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+              <i class="fa-solid fa-trophy"></i> 啟動 pH 黃金區間配比挑戰闖關
+            </button>
+          </div>
+        </div>
+
+        <!-- 雙欄布局：左側控制與化學反應式，右側 Chart.js 解離物種分佈圖與即時指標卡 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex-wrap: wrap;">
+          
+          <!-- 左側：藥劑源選擇、pH 調節與化學式動態顯示 -->
+          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+            
+            <!-- 消毒藥劑來源選擇開關 -->
+            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+              <label style="font-size: 0.85rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 0.6rem;">
+                <i class="fa-solid fa-vial"></i> 選擇消毒藥劑來源 (Disinfection Agent Source)：
+              </label>
+              <div style="display: flex; gap: 1rem;">
+                <button class="industrial-btn cyan active" id="btn-source-naocl" style="flex: 1; padding: 0.6rem; font-size: 0.85rem;">
+                  <i class="fa-solid fa-droplet"></i> 次氯酸鈉 NaOCl (鹼性反應)
+                </button>
+                <button class="industrial-btn blue" id="btn-source-cl2" style="flex: 1; padding: 0.6rem; font-size: 0.85rem; opacity: 0.7;">
+                  <i class="fa-solid fa-wind"></i> 氯氣 Cl₂ (酸性水解)
+                </button>
+              </div>
+            </div>
+
+            <!-- 化學反應式動態高亮盒 -->
+            <div style="background: rgba(15, 23, 42, 0.8); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary-cyan);">
+              <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.3rem;" id="chem-source-title">次氯酸鈉水解化學反應式：</div>
+              <div style="font-family: var(--font-code); font-size: 0.95rem; color: var(--primary-cyan); font-weight: 600; margin-bottom: 0.4rem;" id="chem-source-eq">
+                NaOCl + H₂O ⇌ HOCl + Na⁺ + OH⁻
+              </div>
+              <div style="font-family: var(--font-code); font-size: 0.9rem; color: var(--accent-green);" id="chem-speciation-eq">
+                HOCl ⇌ H⁺ + OCl⁻ (pKₐ = 7.53 at 25°C)
+              </div>
+              <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 0.5rem;" id="chem-source-desc">
+                NaOCl 溶於水會釋放 OH⁻ 離子使水體 pH 升高。解離產生的 HOCl (次氯酸) 殺菌力為 OCl⁻ (次氯酸根) 的 80 倍！
+              </p>
+            </div>
+
+            <!-- pH 與總餘氯動態調節滑桿 -->
+            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                  <label style="font-size: 0.85rem; color: #fff; font-weight: 700;">
+                    <i class="fa-solid fa-gauge-high text-cyan"></i> 水體 pH 熱力學調節：
+                  </label>
+                  <span style="font-family: var(--font-code); font-size: 1.1rem; font-weight: 800; color: var(--primary-cyan);" id="speciation-ph-val">7.20 pH</span>
+                </div>
+                <input type="range" id="slider-speciation-ph" min="4.0" max="10.0" step="0.1" value="7.2" style="width: 100%; accent-color: var(--primary-cyan); cursor: pointer;">
+              </div>
+
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                  <label style="font-size: 0.85rem; color: #fff; font-weight: 700;">
+                    <i class="fa-solid fa-flask text-green"></i> 總游離有效餘氯 (Total Free Chlorine):
+                  </label>
+                  <span style="font-family: var(--font-code); font-size: 1rem; font-weight: 800; color: var(--accent-green);" id="speciation-dose-val">0.60 mg/L</span>
+                </div>
+                <input type="range" id="slider-speciation-dose" min="0.1" max="3.0" step="0.05" value="0.60" style="width: 100%; accent-color: var(--accent-green); cursor: pointer;">
+              </div>
+
+              <!-- 滴定微調按鈕：加酸 HCl / 加鹼 NaOH -->
+              <div style="display: flex; gap: 0.8rem;">
+                <button class="industrial-btn amber" id="btn-titrate-hcl" style="flex: 1; padding: 0.4rem; font-size: 0.78rem;">
+                  <i class="fa-solid fa-flask-vial"></i> 滴定加酸 (HCl 降 pH)
+                </button>
+                <button class="industrial-btn green" id="btn-titrate-naoh" style="flex: 1; padding: 0.4rem; font-size: 0.78rem;">
+                  <i class="fa-solid fa-flask-vial"></i> 滴定加鹼 (NaOH 升 pH)
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 右側：Chart.js 物種曲線與即時指標卡 -->
+          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+            
+            <!-- 即時物種濃度與相對殺菌力卡片 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
+              <div class="metric-card cyan" style="padding: 0.8rem;">
+                <div class="metric-label" style="font-size: 0.75rem;">[HOCl] 次氯酸 (強殺菌)</div>
+                <div class="metric-value" style="font-size: 1.2rem;" id="spec-val-hocl">0.41 <span class="metric-unit">mg/L</span></div>
+                <div class="metric-sub" style="font-size: 0.7rem; color: var(--primary-cyan);" id="spec-pct-hocl">佔比 68.1%</div>
+              </div>
+
+              <div class="metric-card green" style="padding: 0.8rem;">
+                <div class="metric-label" style="font-size: 0.75rem;">[OCl⁻] 次氯酸根 (弱殺菌)</div>
+                <div class="metric-value" style="font-size: 1.2rem;" id="spec-val-ocl">0.19 <span class="metric-unit">mg/L</span></div>
+                <div class="metric-sub" style="font-size: 0.7rem; color: var(--accent-green);" id="spec-pct-ocl">佔比 31.9%</div>
+              </div>
+
+              <div class="metric-card purple" style="padding: 0.8rem;">
+                <div class="metric-label" style="font-size: 0.75rem;">相對殺菌效能指數</div>
+                <div class="metric-value" style="font-size: 1.2rem;" id="spec-val-power">68.5 <span class="metric-unit">%</span></div>
+                <div class="metric-sub" style="font-size: 0.7rem;" id="spec-sub-power">黃金最佳消毒區</div>
+              </div>
+            </div>
+
+            <!-- Chart.js 解離曲線圖卡片 -->
+            <div style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.85rem; font-weight: 700; color: #fff;">
+                  <i class="fa-solid fa-chart-area text-purple"></i> pH 物種熱力學平衡解離曲線 (Speciation Curve)
+                </span>
+                <span class="status-badge" style="font-size: 0.7rem; background: rgba(139, 92, 246, 0.2); color: #c084fc; border-color: #8b5cf6;" id="speciation-zone-tag">
+                  黃金消毒區 (pH 6.5 ~ 7.5)
+                </span>
+              </div>
+
+              <div style="position: relative; height: 180px; width: 100%;">
+                <canvas id="chartPhSpeciation"></canvas>
+              </div>
+
+              <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.4rem; display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa-solid fa-circle" style="color:#00f2fe;"></i> HOCl (次氯酸)</span>
+                <span><i class="fa-solid fa-circle" style="color:#10b981;"></i> OCl⁻ (次氯酸根)</span>
+                <span><i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> 當前 pH 追蹤游標</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
   </main>

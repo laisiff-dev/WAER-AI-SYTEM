@@ -628,3 +628,69 @@ input:checked + .slider:before {
     border-bottom: 1px solid #ccc !important;
   }
 }
+
+/* ============================================================
+   加氯 / 減氯水質控制互動遊戲專用樣式 (Chlorine Game CSS)
+   ============================================================ */
+.drop-anim {
+  animation: drip-drop 1.2s infinite ease-in;
+}
+
+@keyframes drip-drop {
+  0% { transform: translateY(0); opacity: 1; }
+  70% { opacity: 0.8; }
+  100% { transform: translateY(40px); opacity: 0; }
+}
+
+.spin-mixer {
+  animation: rotate-impeller 2s linear infinite;
+  transform-origin: 250px 170px;
+}
+
+@keyframes rotate-impeller {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.game-stat-box {
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+}
+
+.game-stat-box:hover {
+  border-color: var(--primary-cyan) !important;
+}
+
+.metric-card.purple {
+  border-left: 4px solid var(--accent-purple);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(15, 23, 42, 0.6));
+}
+
+.metric-card.purple .metric-value {
+  color: #c084fc;
+}
+
+input[type="range"] {
+  height: 6px;
+  border-radius: 4px;
+  background: #1e293b;
+  outline: none;
+}
+
+.industrial-btn.purple {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  border: 1px solid #a78bfa;
+}
+
+.industrial-btn.purple:hover {
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
+}
+
+.industrial-btn.active {
+  box-shadow: 0 0 12px var(--primary-cyan);
+  border-color: var(--primary-cyan) !important;
+  opacity: 1 !important;
+}
+
+

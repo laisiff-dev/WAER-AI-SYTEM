@@ -53,6 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderLongTermChart();
       } else if (tab.dataset.tab === 'tab-education') {
         renderRegressionChart();
+      } else if (tab.dataset.tab === 'tab-chlorine-game') {
+        renderChlorineGameChart();
+        renderPhSpeciationChart();
       }
     });
   });
@@ -673,6 +676,735 @@ document.addEventListener('DOMContentLoaded', () => {
     link.click();
     document.body.removeChild(link);
   });
+
+  // ============================================================
+  // Tab 6: 加氯 / 減氯水質控制互動遊戲核心邏輯 (Chlorine Game Engine)
+  // ============================================================
+  const gameState = {
+    mode: 'SANDBOX', // 'SANDBOX', 'QUEST_1', 'QUEST_2', 'QUEST_3'
+    score: 100,
+    timeLeft: 0,
+    timerInterval: null,
+    naoclRate: 35, // mL/min
+    nahso3Rate: 0, // mL/min
+    inflow: 50, // L/min
+    organicLoad: 0, // 0 to 1.5
+    chlorine: 0.58, // mg/L
+    orp: 710, // mV
+    ph: 7.35, // pH
+    thm: 8, // ppb
+    pathogenProtection: 99.99, // %
+    questTargetTime: 0,
+    questTimeInZone: 0,
+    history: {
+      labels: [],
+      chlorine: [],
+      naocl: [],
+      nahso3: []
+    }
+  };
+
+  let chartChlorineInstance = null;
+
+  function renderChlorineGameChart() {
+    const ctx = document.getElementById('chartChlorineGame');
+    if (!ctx) return;
+    if (chartChlorineInstance) return;
+
+    chartChlorineInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: gameState.history.labels,
+        datasets: [
+          {
+            label: '自由有效餘氯 Free Cl₂ (mg/L)',
+            data: gameState.history.chlorine,
+            borderColor: '#00f2fe',
+            borderWidth: 3,
+            backgroundColor: 'rgba(0, 242, 254, 0.1)',
+            fill: true,
+            tension: 0.3,
+            yAxisID: 'y'
+          },
+          {
+            label: 'NaOCl 加藥量 (mL/min)',
+            data: gameState.history.naocl,
+            borderColor: '#38bdf8',
+            borderWidth: 2,
+            borderDash: [4, 4],
+            backgroundColor: 'transparent',
+            tension: 0.1,
+            yAxisID: 'y1'
+          },
+          {
+            label: 'NaHSO₃ 減氯量 (mL/min)',
+            data: gameState.history.nahso3,
+            borderColor: '#34d399',
+            borderWidth: 2,
+            borderDash: [2, 2],
+            backgroundColor: 'transparent',
+            tension: 0.1,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+        },
+        scales: {
+          x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: {
+            title: { display: true, text: '餘氯 (mg/L)', color: '#00f2fe' },
+            min: 0,
+            max: 2.2,
+            ticks: { color: '#00f2fe' },
+            grid: { color: 'rgba(255,255,255,0.08)' }
+          },
+          y1: {
+            position: 'right',
+            title: { display: true, text: '泵流量 (mL/min)', color: '#94a3b8' },
+            min: 0,
+            max: 100,
+            ticks: { color: '#94a3b8' },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+  }
+
+  function updateChlorineGamePhysics() {
+    // 1. Calculate Chlorine Addition Rate
+    // Base addition: 35 mL/min at 50 L/min inflow => +0.012 mg/L per sec
+    const naoclInput = (gameState.naoclRate / 35) * 0.012 * (50 / gameState.inflow);
+
+    // 2. Calculate Dechlorination Neutralization Rate
+    // 30 mL/min NaHSO3 neutralizes ~0.018 mg/L per sec
+    const nahso3Neutralization = (gameState.nahso3Rate / 30) * 0.018;
+
+    // 3. Organic Demand (Storm runoff)
+    const organicConsumption = gameState.organicLoad * 0.022;
+
+    // 4. Baseline water flow decay
+    const baseDecay = 0.003;
+
+    // Net delta chlorine
+    const delta = naoclInput - nahso3Neutralization - organicConsumption - baseDecay;
+    gameState.chlorine = Math.max(0.01, Math.min(2.5, gameState.chlorine + delta));
+
+    // Calculate ORP from Chlorine
+    if (gameState.chlorine <= 0.02) {
+      gameState.orp = 450;
+    } else {
+      gameState.orp = Math.round(145.2 * Math.log(gameState.chlorine) + 788.4);
+      gameState.orp = Math.max(420, Math.min(850, gameState.orp));
+    }
+
+    // Calculate THMs Risk (Trihalomethanes)
+    if (gameState.chlorine > 1.0) {
+      gameState.thm = Math.round(8 + Math.pow((gameState.chlorine - 1.0) * 12, 1.8));
+    } else {
+      gameState.thm = Math.max(3, Math.round(gameState.chlorine * 12));
+    }
+
+    // Calculate Pathogen Protection (%)
+    if (gameState.chlorine < 0.2) {
+      gameState.pathogenProtection = parseFloat((gameState.chlorine / 0.2 * 99.9).toFixed(1));
+    } else {
+      gameState.pathogenProtection = 99.99;
+    }
+
+    // Dynamic Tank Water SVG Colors & Animations
+    const stop1 = document.getElementById('cg-grad-stop1');
+    const stop2 = document.getElementById('cg-grad-stop2');
+    const tankWater = document.getElementById('cg-tank-water');
+    const mixerBlades = document.getElementById('cg-mixer-blades');
+    const animNaoclPump = document.getElementById('anim-cg-pump-naocl');
+    const animNahso3Pump = document.getElementById('anim-cg-pump-nahso3');
+    const dropletNaocl = document.getElementById('droplet-naocl');
+    const dropletNahso3 = document.getElementById('droplet-nahso3');
+
+    if (stop1 && stop2) {
+      if (gameState.chlorine > 1.2) {
+        // Toxic Purple Alert
+        stop1.setAttribute('stop-color', '#a855f7');
+        stop2.setAttribute('stop-color', '#7e22ce');
+        if (tankWater) tankWater.setAttribute('stroke', '#ef4444');
+      } else if (gameState.chlorine < 0.2 || gameState.organicLoad > 0.5) {
+        // Murky Brown Organic
+        stop1.setAttribute('stop-color', '#d97706');
+        stop2.setAttribute('stop-color', '#92400e');
+        if (tankWater) tankWater.setAttribute('stroke', '#f59e0b');
+      } else {
+        // Normal Cyan Clean Water
+        stop1.setAttribute('stop-color', '#0284c7');
+        stop2.setAttribute('stop-color', '#0369a1');
+        if (tankWater) tankWater.setAttribute('stroke', '#00f2fe');
+      }
+    }
+
+    // Mixer Animation
+    if (mixerBlades) {
+      if (gameState.naoclRate > 0 || gameState.nahso3Rate > 0) {
+        mixerBlades.classList.add('spin-mixer');
+      } else {
+        mixerBlades.classList.remove('spin-mixer');
+      }
+    }
+
+    // Droplet Animations
+    if (dropletNaocl) dropletNaocl.style.display = gameState.naoclRate > 0 ? 'block' : 'none';
+    if (dropletNahso3) dropletNahso3.style.display = gameState.nahso3Rate > 0 ? 'block' : 'none';
+
+    // SVG Readouts
+    const svgClEl = document.getElementById('cg-svg-chlorine-val');
+    if (svgClEl) svgClEl.textContent = `${gameState.chlorine.toFixed(2)} mg/L`;
+
+    // Sync Cards & Badges
+    syncGameMetricsUI();
+
+    // Chart Data Push
+    const now = new Date();
+    const timeStr = `${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    gameState.history.labels.push(timeStr);
+    gameState.history.chlorine.push(parseFloat(gameState.chlorine.toFixed(2)));
+    gameState.history.naocl.push(gameState.naoclRate);
+    gameState.history.nahso3.push(gameState.nahso3Rate);
+
+    if (gameState.history.labels.length > 25) {
+      gameState.history.labels.shift();
+      gameState.history.chlorine.shift();
+      gameState.history.naocl.shift();
+      gameState.history.nahso3.shift();
+    }
+
+    if (chartChlorineInstance) {
+      chartChlorineInstance.update('none');
+    }
+
+    // Quest mode tick
+    if (gameState.mode !== 'SANDBOX') {
+      evaluateQuestProgress();
+    }
+  }
+  setInterval(updateChlorineGamePhysics, 1000);
+
+  function syncGameMetricsUI() {
+    const elCl = document.getElementById('cg-metric-chlorine');
+    const elSubCl = document.getElementById('cg-sub-chlorine');
+    const cardCl = document.getElementById('card-cg-chlorine');
+    const elOrp = document.getElementById('cg-metric-orp');
+    const elThm = document.getElementById('cg-metric-thm');
+    const cardThm = document.getElementById('card-cg-thm');
+    const elPathogen = document.getElementById('cg-metric-pathogen');
+    const badgeStatus = document.getElementById('cg-status-badge');
+
+    if (elCl) elCl.innerHTML = `${gameState.chlorine.toFixed(2)} <span class="metric-unit">mg/L</span>`;
+    if (elOrp) elOrp.innerHTML = `${gameState.orp} <span class="metric-unit">mV</span>`;
+    if (elThm) elThm.innerHTML = `${gameState.thm} <span class="metric-unit">ppb</span>`;
+    if (elPathogen) elPathogen.innerHTML = `${gameState.pathogenProtection} <span class="metric-unit">%</span>`;
+
+    if (gameState.chlorine >= 0.2 && gameState.chlorine <= 1.0) {
+      if (cardCl) cardCl.className = 'metric-card green';
+      if (elSubCl) elSubCl.textContent = '法規合格 (0.2 ~ 1.0 mg/L)';
+      if (badgeStatus) {
+        badgeStatus.className = 'badge-status green';
+        badgeStatus.textContent = '水質法規合規 (PASS)';
+      }
+    } else if (gameState.chlorine < 0.2) {
+      if (cardCl) cardCl.className = 'metric-card red';
+      if (elSubCl) elSubCl.textContent = '⚠️ 餘氯過低 (消毒防護不足)';
+      if (badgeStatus) {
+        badgeStatus.className = 'badge-status red';
+        badgeStatus.textContent = '⚠️ 消毒不足警報';
+      }
+    } else {
+      if (cardCl) cardCl.className = 'metric-card red';
+      if (elSubCl) elSubCl.textContent = '⚠️ 餘氯過高 (三鹵甲烷致癌風險)';
+      if (badgeStatus) {
+        badgeStatus.className = 'badge-status red';
+        badgeStatus.textContent = '⚠️ 過度加氯警報';
+      }
+    }
+
+    if (gameState.thm > 80) {
+      if (cardThm) cardThm.className = 'metric-card red';
+    } else {
+      if (cardThm) cardThm.className = 'metric-card purple';
+    }
+
+    const modeText = document.getElementById('cg-mode-text');
+    const timerText = document.getElementById('cg-timer-display');
+    const scoreText = document.getElementById('cg-score-display');
+
+    if (scoreText) scoreText.textContent = gameState.score;
+    if (timerText) timerText.textContent = gameState.mode === 'SANDBOX' ? '-- s' : `${gameState.timeLeft} s`;
+
+    if (modeText) {
+      if (gameState.mode === 'SANDBOX') modeText.textContent = '自由動態沙盒';
+      else if (gameState.mode === 'QUEST_1') modeText.textContent = '關卡 1：暴雨處置';
+      else if (gameState.mode === 'QUEST_2') modeText.textContent = '關卡 2：減氯中和救援';
+      else if (gameState.mode === 'QUEST_3') modeText.textContent = '關卡 3：60秒動態恆定';
+    }
+  }
+
+  // Sliders Event Handlers
+  const sliderNaocl = document.getElementById('cg-slider-naocl');
+  if (sliderNaocl) {
+    sliderNaocl.addEventListener('input', (e) => {
+      gameState.naoclRate = parseInt(e.target.value);
+      document.getElementById('cg-val-naocl-rate').textContent = `${gameState.naoclRate} mL/min`;
+    });
+  }
+
+  const sliderNahso3 = document.getElementById('cg-slider-nahso3');
+  if (sliderNahso3) {
+    sliderNahso3.addEventListener('input', (e) => {
+      gameState.nahso3Rate = parseInt(e.target.value);
+      document.getElementById('cg-val-nahso3-rate').textContent = `${gameState.nahso3Rate} mL/min`;
+    });
+  }
+
+  const sliderInflow = document.getElementById('cg-slider-inflow');
+  if (sliderInflow) {
+    sliderInflow.addEventListener('input', (e) => {
+      gameState.inflow = parseInt(e.target.value);
+      document.getElementById('cg-val-inflow').textContent = `${gameState.inflow} L/min`;
+    });
+  }
+
+  // Organic Spike Toggle
+  document.getElementById('btn-cg-toggle-organic')?.addEventListener('click', () => {
+    if (gameState.organicLoad > 0) {
+      gameState.organicLoad = 0;
+      addEventLog('INFO', '手動取消暴雨有機物干擾。');
+    } else {
+      gameState.organicLoad = 1.0;
+      addEventLog('ALARM', '🌧️ 手動觸發暴雨！原水有機物暴增，氯需求 Spike！');
+    }
+  });
+
+  // PBL Quest Handlers
+  document.getElementById('btn-cg-sandbox')?.addEventListener('click', () => {
+    startQuest('SANDBOX');
+  });
+
+  document.getElementById('btn-cg-quest-1')?.addEventListener('click', () => {
+    startQuest('QUEST_1');
+  });
+
+  document.getElementById('btn-cg-quest-2')?.addEventListener('click', () => {
+    startQuest('QUEST_2');
+  });
+
+  document.getElementById('btn-cg-quest-3')?.addEventListener('click', () => {
+    startQuest('QUEST_3');
+  });
+
+  // Link button from tab-education "開始 PBL 闖關挑戰"
+  document.getElementById('btn-start-pbl-challenge')?.addEventListener('click', () => {
+    const gameTabBtn = document.querySelector('[data-tab="tab-chlorine-game"]');
+    if (gameTabBtn) gameTabBtn.click();
+    startQuest('QUEST_1');
+  });
+
+  function startQuest(mode) {
+    if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+    gameState.mode = mode;
+    gameState.questTimeInZone = 0;
+
+    if (mode === 'SANDBOX') {
+      gameState.score = 100;
+      gameState.timeLeft = 0;
+      gameState.organicLoad = 0;
+      gameState.chlorine = 0.58;
+      gameState.naoclRate = 35;
+      gameState.nahso3Rate = 0;
+      if (sliderNaocl) sliderNaocl.value = 35;
+      if (sliderNahso3) sliderNahso3.value = 0;
+      document.getElementById('cg-val-naocl-rate').textContent = '35 mL/min';
+      document.getElementById('cg-val-nahso3-rate').textContent = '0 mL/min';
+      addEventLog('INFO', '遊戲切換至 [自由動態沙盒模式]');
+      return;
+    }
+
+    if (mode === 'QUEST_1') {
+      // Storm organic spike quest
+      gameState.timeLeft = 30;
+      gameState.score = 100;
+      gameState.organicLoad = 1.2;
+      gameState.chlorine = 0.08;
+      gameState.naoclRate = 10;
+      gameState.nahso3Rate = 0;
+      if (sliderNaocl) sliderNaocl.value = 10;
+      if (sliderNahso3) sliderNahso3.value = 0;
+      document.getElementById('cg-val-naocl-rate').textContent = '10 mL/min';
+      document.getElementById('cg-val-nahso3-rate').textContent = '0 mL/min';
+      addEventLog('ALARM', '🎮 啟動關卡 1【暴雨緊急處置】：原水有機物暴增！餘氯暴跌至 0.08 mg/L，請於 30 秒內加大 NaOCl 補氯回 0.4~0.8 mg/L！');
+    } else if (mode === 'QUEST_2') {
+      // Over-chlorination dechlorination emergency
+      gameState.timeLeft = 25;
+      gameState.score = 100;
+      gameState.organicLoad = 0;
+      gameState.chlorine = 1.85;
+      gameState.naoclRate = 90;
+      gameState.nahso3Rate = 0;
+      if (sliderNaocl) sliderNaocl.value = 90;
+      if (sliderNahso3) sliderNahso3.value = 0;
+      document.getElementById('cg-val-naocl-rate').textContent = '90 mL/min';
+      document.getElementById('cg-val-nahso3-rate').textContent = '0 mL/min';
+      addEventLog('ALARM', '🎮 啟動關卡 2【加藥過量減氯中和】：加藥泵過度加氯至 1.85 mg/L (致癌 THMs 警報)！請調低 NaOCl 並啟動 NaHSO₃ 減氯中和！');
+    } else if (mode === 'QUEST_3') {
+      // 60s stability challenge
+      gameState.timeLeft = 60;
+      gameState.score = 100;
+      gameState.organicLoad = 0;
+      gameState.chlorine = 0.55;
+      gameState.naoclRate = 35;
+      gameState.nahso3Rate = 0;
+      if (sliderNaocl) sliderNaocl.value = 35;
+      if (sliderNahso3) sliderNahso3.value = 0;
+      document.getElementById('cg-val-naocl-rate').textContent = '35 mL/min';
+      document.getElementById('cg-val-nahso3-rate').textContent = '0 mL/min';
+      addEventLog('INFO', '🎮 啟動關卡 3【60秒動態流量恆定考驗】：將餘氯精準維持於 0.5~0.7 mg/L 達 60 秒！');
+    }
+
+    gameState.timerInterval = setInterval(() => {
+      if (gameState.timeLeft > 0) {
+        gameState.timeLeft--;
+
+        // Quest 3 dynamic inflow fluctuation
+        if (gameState.mode === 'QUEST_3' && gameState.timeLeft % 8 === 0) {
+          gameState.inflow = Math.floor(30 + Math.random() * 50);
+          if (sliderInflow) sliderInflow.value = gameState.inflow;
+          document.getElementById('cg-val-inflow').textContent = `${gameState.inflow} L/min`;
+          addEventLog('INFO', `進水流量動態變動至 ${gameState.inflow} L/min，請即時調節加/減氯！`);
+        }
+
+      } else {
+        clearInterval(gameState.timerInterval);
+        finishQuest();
+      }
+    }, 1000);
+  }
+
+  function evaluateQuestProgress() {
+    if (gameState.mode === 'QUEST_1') {
+      if (gameState.chlorine >= 0.4 && gameState.chlorine <= 0.8) {
+        gameState.questTimeInZone++;
+      } else {
+        gameState.score = Math.max(50, gameState.score - 1);
+      }
+    } else if (gameState.mode === 'QUEST_2') {
+      if (gameState.chlorine >= 0.3 && gameState.chlorine <= 0.8) {
+        gameState.questTimeInZone++;
+      } else {
+        gameState.score = Math.max(40, gameState.score - 2);
+      }
+    } else if (gameState.mode === 'QUEST_3') {
+      if (gameState.chlorine >= 0.5 && gameState.chlorine <= 0.7) {
+        gameState.questTimeInZone++;
+      } else {
+        gameState.score = Math.max(30, gameState.score - 1);
+      }
+    }
+  }
+
+  function finishQuest() {
+    let success = false;
+    let msg = '';
+
+    if (gameState.mode === 'QUEST_1') {
+      success = (gameState.chlorine >= 0.3 && gameState.chlorine <= 0.9 && gameState.questTimeInZone >= 10);
+      msg = success ? '🎉 恭喜通過【暴雨緊急處置關】！成功提升加藥率抵銷有機物需求，守護水質！' : '❌ 關卡失敗！餘氯未及時恢復至安全範圍，致使大腸桿菌風險增加。';
+    } else if (gameState.mode === 'QUEST_2') {
+      success = (gameState.chlorine >= 0.2 && gameState.chlorine <= 0.9 && gameState.questTimeInZone >= 8);
+      msg = success ? '🎉 恭喜通過【加藥過量減氯中和關】！成功投加 NaHSO₃ 中和過量餘氯，消除 THMs 風險！' : '❌ 關卡失敗！過量餘氯未能及時中和降解。';
+    } else if (gameState.mode === 'QUEST_3') {
+      success = (gameState.questTimeInZone >= 35 && gameState.score >= 70);
+      msg = success ? `🏆 卓越成就！通過【60秒動態流量恆定大考驗】，榮獲「輔英水務智慧工程師 100 分認證」！` : '❌ 关卡失敗！動態流量變動下餘氯波動過大。';
+    }
+
+    alert(msg);
+    addEventLog(success ? 'AUTO_LOGIC' : 'ALARM', msg);
+    startQuest('SANDBOX');
+  }
+
+  // ============================================================
+  // 水務化學物種熱力學解離 (pH Speciation Engine, pKa = 7.53)
+  // ============================================================
+  const speciationState = {
+    source: 'NaOCl', // 'NaOCl' or 'Cl2'
+    ph: 7.2,
+    totalChlorine: 0.60, // mg/L
+    pKa: 7.53,
+    hoclPct: 68.1,
+    oclPct: 31.9,
+    hoclVal: 0.41,
+    oclVal: 0.19,
+    disinfectionPower: 68.5
+  };
+
+  let chartPhSpeciationInstance = null;
+
+  function calcPhSpeciation(ph, totalCl) {
+    const ratio = Math.pow(10, ph - speciationState.pKa);
+    const hoclFrac = 1 / (1 + ratio);
+    const oclFrac = ratio / (1 + ratio);
+
+    speciationState.ph = ph;
+    speciationState.totalChlorine = totalCl;
+    speciationState.hoclPct = parseFloat((hoclFrac * 100).toFixed(1));
+    speciationState.oclPct = parseFloat((oclFrac * 100).toFixed(1));
+
+    speciationState.hoclVal = parseFloat((totalCl * hoclFrac).toFixed(2));
+    speciationState.oclVal = parseFloat((totalCl * oclFrac).toFixed(2));
+
+    // Germicidal Power relative to 100% HOCl (HOCl is ~80x stronger than OCl-)
+    speciationState.disinfectionPower = parseFloat((speciationState.hoclPct + (speciationState.oclPct * 0.0125)).toFixed(1));
+
+    syncSpeciationUI();
+    renderPhSpeciationChart();
+  }
+
+  function syncSpeciationUI() {
+    const phValEl = document.getElementById('speciation-ph-val');
+    const doseValEl = document.getElementById('speciation-dose-val');
+
+    if (phValEl) phValEl.textContent = `${speciationState.ph.toFixed(2)} pH`;
+    if (doseValEl) doseValEl.textContent = `${speciationState.totalChlorine.toFixed(2)} mg/L`;
+
+    const hoclValEl = document.getElementById('spec-val-hocl');
+    const hoclPctEl = document.getElementById('spec-pct-hocl');
+    const oclValEl = document.getElementById('spec-val-ocl');
+    const oclPctEl = document.getElementById('spec-pct-ocl');
+    const powerValEl = document.getElementById('spec-val-power');
+
+    if (hoclValEl) hoclValEl.innerHTML = `${speciationState.hoclVal.toFixed(2)} <span class="metric-unit">mg/L</span>`;
+    if (hoclPctEl) hoclPctEl.textContent = `佔比 ${speciationState.hoclPct}%`;
+
+    if (oclValEl) oclValEl.innerHTML = `${speciationState.oclVal.toFixed(2)} <span class="metric-unit">mg/L</span>`;
+    if (oclPctEl) oclPctEl.textContent = `佔比 ${speciationState.oclPct}%`;
+
+    if (powerValEl) powerValEl.innerHTML = `${speciationState.disinfectionPower} <span class="metric-unit">%</span>`;
+
+    const subPower = document.getElementById('spec-sub-power');
+    const zoneTag = document.getElementById('speciation-zone-tag');
+
+    if (speciationState.ph >= 6.5 && speciationState.ph <= 7.5) {
+      if (subPower) subPower.textContent = '🌟 黃金最佳殺菌消毒區';
+      if (zoneTag) {
+        zoneTag.className = 'status-badge green';
+        zoneTag.textContent = '黃金消毒區 (pH 6.5 ~ 7.5)';
+      }
+    } else if (speciationState.ph < 6.5) {
+      if (subPower) subPower.textContent = '⚡ 微酸超強殺菌區 (留意氣體/設備腐蝕)';
+      if (zoneTag) {
+        zoneTag.className = 'status-badge cyan';
+        zoneTag.textContent = '微酸強效區 (pH < 6.5)';
+      }
+    } else {
+      if (subPower) subPower.textContent = '⚠️ 鹼性消毒低效區 (OCl⁻ 主導，殺菌極慢)';
+      if (zoneTag) {
+        zoneTag.className = 'status-badge red';
+        zoneTag.textContent = '鹼性低效區 (pH > 7.5)';
+      }
+    }
+
+    const titleEl = document.getElementById('chem-source-title');
+    const eqEl = document.getElementById('chem-source-eq');
+    const descEl = document.getElementById('chem-source-desc');
+
+    if (speciationState.source === 'NaOCl') {
+      if (titleEl) titleEl.textContent = '次氯酸鈉水解化學反應式 (鹼性趨勢)：';
+      if (eqEl) eqEl.textContent = 'NaOCl + H₂O ⇌ HOCl + Na⁺ + OH⁻';
+      if (descEl) descEl.textContent = 'NaOCl 溶於水釋放 OH⁻ 離子使水體 pH 提升。解離產生的 HOCl 殺菌力為 OCl⁻ 的 80 倍！';
+    } else {
+      if (titleEl) titleEl.textContent = '氯氣水解化學反應式 (酸性趨勢)：';
+      if (eqEl) eqEl.textContent = 'Cl₂(g) + H₂O ⇌ HOCl + H⁺ + Cl⁻';
+      if (descEl) descEl.textContent = 'Cl₂ 溶於水產生 H⁺ 離子使水體 pH 下降。若 pH < 4.0 會有氯氣逸散風險，需加鹼調節。';
+    }
+  }
+
+  function renderPhSpeciationChart() {
+    const ctx = document.getElementById('chartPhSpeciation');
+    if (!ctx) return;
+
+    const phLabels = [];
+    const hoclData = [];
+    const oclData = [];
+    const currentDotData = [];
+
+    for (let ph = 4.0; ph <= 10.01; ph += 0.2) {
+      const phVal = parseFloat(ph.toFixed(1));
+      phLabels.push(phVal);
+
+      const r = Math.pow(10, phVal - speciationState.pKa);
+      const hFrac = (1 / (1 + r)) * 100;
+      const oFrac = (r / (1 + r)) * 100;
+
+      hoclData.push(parseFloat(hFrac.toFixed(1)));
+      oclData.push(parseFloat(oFrac.toFixed(1)));
+
+      if (Math.abs(phVal - parseFloat(speciationState.ph.toFixed(1))) < 0.15) {
+        currentDotData.push(parseFloat(hFrac.toFixed(1)));
+      } else {
+        currentDotData.push(null);
+      }
+    }
+
+    if (chartPhSpeciationInstance) {
+      chartPhSpeciationInstance.data.datasets[0].data = hoclData;
+      chartPhSpeciationInstance.data.datasets[1].data = oclData;
+      chartPhSpeciationInstance.data.datasets[2].data = currentDotData;
+      chartPhSpeciationInstance.update('none');
+      return;
+    }
+
+    chartPhSpeciationInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: phLabels,
+        datasets: [
+          {
+            label: 'HOCl 次氯酸 (%)',
+            data: hoclData,
+            borderColor: '#00f2fe',
+            borderWidth: 2,
+            backgroundColor: 'rgba(0, 242, 254, 0.1)',
+            fill: true,
+            tension: 0.4
+          },
+          {
+            label: 'OCl⁻ 次氯酸根 (%)',
+            data: oclData,
+            borderColor: '#10b981',
+            borderWidth: 2,
+            borderDash: [3, 3],
+            backgroundColor: 'transparent',
+            tension: 0.4
+          },
+          {
+            label: '當前 pH 追蹤游標',
+            data: currentDotData,
+            borderColor: '#ef4444',
+            backgroundColor: '#ef4444',
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            showLine: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'pH 值', color: '#94a3b8', font: { size: 10 } },
+            ticks: { color: '#94a3b8', font: { size: 10 } },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          y: {
+            title: { display: true, text: '物種佔比 (%)', color: '#94a3b8', font: { size: 10 } },
+            min: 0,
+            max: 100,
+            ticks: { color: '#94a3b8', font: { size: 10 } },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          }
+        }
+      }
+    });
+  }
+
+  // Speciation Sliders & Buttons Event Handlers
+  const sliderSpecPh = document.getElementById('slider-speciation-ph');
+  if (sliderSpecPh) {
+    sliderSpecPh.addEventListener('input', (e) => {
+      calcPhSpeciation(parseFloat(e.target.value), speciationState.totalChlorine);
+    });
+  }
+
+  const sliderSpecDose = document.getElementById('slider-speciation-dose');
+  if (sliderSpecDose) {
+    sliderSpecDose.addEventListener('input', (e) => {
+      calcPhSpeciation(speciationState.ph, parseFloat(e.target.value));
+    });
+  }
+
+  // Reagent Source Buttons
+  const btnSourceNaocl = document.getElementById('btn-source-naocl');
+  const btnSourceCl2 = document.getElementById('btn-source-cl2');
+
+  btnSourceNaocl?.addEventListener('click', () => {
+    speciationState.source = 'NaOCl';
+    btnSourceNaocl.classList.add('active');
+    btnSourceCl2?.classList.remove('active');
+    btnSourceNaocl.style.opacity = '1';
+    if (btnSourceCl2) btnSourceCl2.style.opacity = '0.7';
+
+    const newPh = Math.min(10.0, speciationState.ph + 0.3);
+    if (sliderSpecPh) sliderSpecPh.value = newPh.toFixed(1);
+    calcPhSpeciation(newPh, speciationState.totalChlorine);
+    addEventLog('INFO', '切換消毒藥劑源為 [次氯酸鈉 NaOCl]：解離產生 OH⁻，促使 pH 微升。');
+  });
+
+  btnSourceCl2?.addEventListener('click', () => {
+    speciationState.source = 'Cl2';
+    btnSourceCl2.classList.add('active');
+    btnSourceNaocl?.classList.remove('active');
+    btnSourceCl2.style.opacity = '1';
+    if (btnSourceNaocl) btnSourceNaocl.style.opacity = '0.7';
+
+    const newPh = Math.max(4.0, speciationState.ph - 0.4);
+    if (sliderSpecPh) sliderSpecPh.value = newPh.toFixed(1);
+    calcPhSpeciation(newPh, speciationState.totalChlorine);
+    addEventLog('INFO', '切換消毒藥劑源為 [氯氣 Cl₂]：水解釋放 H⁺，促使 pH 微降。');
+  });
+
+  // Titration HCl / NaOH
+  document.getElementById('btn-titrate-hcl')?.addEventListener('click', () => {
+    const newPh = Math.max(4.0, speciationState.ph - 0.3);
+    if (sliderSpecPh) sliderSpecPh.value = newPh.toFixed(1);
+    calcPhSpeciation(newPh, speciationState.totalChlorine);
+    addEventLog('INFO', `滴定加酸 (HCl)：pH 降低至 ${newPh.toFixed(1)}，提升 HOCl 強殺菌體比例。`);
+  });
+
+  document.getElementById('btn-titrate-naoh')?.addEventListener('click', () => {
+    const newPh = Math.min(10.0, speciationState.ph + 0.3);
+    if (sliderSpecPh) sliderSpecPh.value = newPh.toFixed(1);
+    calcPhSpeciation(newPh, speciationState.totalChlorine);
+    addEventLog('INFO', `滴定加鹼 (NaOH)：pH 上升至 ${newPh.toFixed(1)}，OCl⁻ 比例增加。`);
+  });
+
+  // pH Challenge Quest Game
+  document.getElementById('btn-ph-challenge')?.addEventListener('click', () => {
+    btnSourceNaocl?.click();
+    if (sliderSpecPh) sliderSpecPh.value = '8.8';
+    calcPhSpeciation(8.8, 0.60);
+
+    alert('🏆 啟動【pH 黃金區間化學配比挑戰】：\n\n情境：加藥源使用次氯酸鈉 (NaOCl)，使得水體 pH 飆升至 8.8 (此時強效 HOCl 僅佔 5%)！\n\n任務目標：請使用「滴定加酸 (HCl)」或調節 pH 滑桿，將水體調整至 pH 6.5 ~ 7.2 黃金區間，使 HOCl 佔比達 75% 以上，獲取水務化學特優認證！');
+
+    const checkInterval = setInterval(() => {
+      if (speciationState.hoclPct >= 75.0 && speciationState.ph >= 6.5 && speciationState.ph <= 7.2) {
+        clearInterval(checkInterval);
+        alert(`🎉 恭喜通關！成功將 pH 調節至 ${speciationState.ph.toFixed(2)}，強效殺菌體 [HOCl] 佔比達到 ${speciationState.hoclPct}%！殺菌效能達 100% 黃金水準！`);
+        addEventLog('AUTO_LOGIC', '🏆 通過【pH 黃金區間化學配比挑戰】，榮獲輔英水務化學特優勳章！');
+      }
+    }, 1000);
+
+    setTimeout(() => {
+      clearInterval(checkInterval);
+    }, 45000);
+  });
+
+  // Initial calculation
+  calcPhSpeciation(7.2, 0.60);
 
   // Initial UI sync
   syncUI();
