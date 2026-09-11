@@ -409,14 +409,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.getElementById('btn-add-dpd-point')?.addEventListener('click', () => {
-    const valInput = document.getElementById('input-dpd-val');
-    const val = parseFloat(valInput.value);
-    if (!isNaN(val) && val > 0) {
-      state.dpdLabData.push({ chlorine: val, orp: Math.round(state.cleanWaterOrp) });
-      renderRegressionChart();
-      alert(`已成功新增 DPD 採樣點 (${val} mg/L, ORP ${Math.round(state.cleanWaterOrp)}mV)！`);
-      valInput.value = '';
+    const dpdInput = document.getElementById('input-dpd-val');
+    const orpInput = document.getElementById('input-orp-val');
+
+    const dpdVal = parseFloat(dpdInput.value);
+    let orpVal = parseFloat(orpInput.value);
+
+    if (isNaN(orpVal)) {
+      orpVal = Math.round(state.cleanWaterOrp);
     }
+
+    if (!isNaN(dpdVal) && dpdVal > 0) {
+      state.dpdLabData.push({ chlorine: dpdVal, orp: orpVal });
+      renderRegressionChart();
+      alert(`已成功新增 NIEA 實驗對比數據點：\n自由餘氯: ${dpdVal} mg/L, 線上 ORP: ${orpVal} mV！`);
+      dpdInput.value = '';
+      orpInput.value = '';
+    } else {
+      alert('請填入有效的自由餘氯數值 (mg/L)！');
+    }
+  });
+
+  document.getElementById('btn-reset-dpd-points')?.addEventListener('click', () => {
+    state.dpdLabData = [
+      { chlorine: 0.25, orp: 610 },
+      { chlorine: 0.40, orp: 660 },
+      { chlorine: 0.58, orp: 710 },
+      { chlorine: 0.75, orp: 750 },
+      { chlorine: 0.90, orp: 785 }
+    ];
+    renderRegressionChart();
+    alert('已重置為標準對比數據庫！');
   });
 
   // ============================================================
