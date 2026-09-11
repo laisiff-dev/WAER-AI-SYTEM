@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>輔英科技大學 水源地水質自動監控系統 - 網頁型 SCADA 與可動化教學平台</title>
+  
+  <!-- Font Awesome & Lucide Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Application CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- 頂部導航列 Header -->
+  <header class="app-header">
+    <div class="brand-container">
+      <div class="brand-logo">FY</div>
+      <div class="brand-text">
+        <h1>輔英科技大學 水源地水質自動監控系統</h1>
+        <p>Fooyin University Water Source Quality Automated IoT SCADA & Field Control System</p>
+      </div>
+    </div>
+    
+    <div class="header-status-bar">
+      <div class="status-badge">
+        <div class="dot-indicator" id="wifi-status-dot"></div>
+        <span>DO4 Smart Box Wi-Fi: <strong id="wifi-status-text">已連線</strong></span>
+      </div>
+      <div class="status-badge">
+        <i class="fa-solid fa-flask text-cyan"></i>
+        <span>消毒合規率: <strong id="compliance-rate">100%</strong></span>
+      </div>
+      <div class="status-badge">
+        <i class="fa-solid fa-clock text-amber"></i>
+        <span id="current-time">2026-09-12 06:00:00</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主導覽分頁 Tabs -->
+  <nav class="app-nav">
+    <button class="nav-tab active" data-tab="tab-scada">
+      <i class="fa-solid fa-chart-line"></i> SCADA 主戰情室 (圖 4.1 平面圖)
+    </button>
+    <button class="nav-tab" data-tab="tab-field-ctrl">
+      <i class="fa-solid fa-microchip"></i> 現場可動化控制面板 (DO4 Smart Box)
+    </button>
+    <button class="nav-tab" data-tab="tab-education">
+      <i class="fa-solid fa-graduation-cap"></i> 雙師教學與 PBL 亮點展示
+    </button>
+    <button class="nav-tab" data-tab="tab-import">
+      <i class="fa-solid fa-file-import"></i> 資料匯入與動態模擬器
+    </button>
+    <button class="nav-tab" data-tab="tab-reports">
+      <i class="fa-solid fa-file-pdf"></i> 長期數據整理與法定報表
+    </button>
+  </nav>
+
+  <!-- 主內容區域 -->
+  <main class="main-content">
+
+    <!-- ============================================================
+         Tab 1: SCADA 主戰情室 (圖 4.1 客製平面圖)
+         ============================================================ -->
+    <div id="tab-scada" class="tab-panel active">
+      
+      <!-- 頂部指標卡數值位覽 -->
+      <div class="metrics-row">
+        <div class="metric-card cyan">
+          <div class="metric-label">沉澱池 pH (原水)</div>
+          <div class="metric-value" id="val-sed-ph">7.14 <span class="metric-unit">pH</span></div>
+          <div class="metric-sub">感測器: pH485-A-C-N</div>
+        </div>
+
+        <div class="metric-card cyan">
+          <div class="metric-label">沉澱池 ORP (原水總氧化力)</div>
+          <div class="metric-value" id="val-sed-orp">485 <span class="metric-unit">mV</span></div>
+          <div class="metric-sub">感測器: ORP485-A-C-N</div>
+        </div>
+
+        <div class="metric-card green" id="card-clean-ph">
+          <div class="metric-label">清水池 pH (出水法規 6.0~8.5)</div>
+          <div class="metric-value" id="val-clean-ph">7.35 <span class="metric-unit">pH</span></div>
+          <div class="metric-sub">符合飲用水標準</div>
+        </div>
+
+        <div class="metric-card green" id="card-clean-orp">
+          <div class="metric-label">清水池 ORP / 推算自由餘氯</div>
+          <div class="metric-value" id="val-clean-orp">710 <span class="metric-unit">mV</span></div>
+          <div class="metric-sub">推算自由餘氯: <strong id="val-clean-chlorine">0.58</strong> mg/L</div>
+        </div>
+
+        <div class="metric-card amber">
+          <div class="metric-label">砂濾泵 A/B 運轉與交替時數</div>
+          <div class="metric-value" id="val-pump-status">Pump A 運轉中</div>
+          <div class="metric-sub">Pump A: <span id="hrs-pump-a">142</span>h | Pump B: <span id="hrs-pump-b">139</span>h</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        
+        <!-- 中央圖 4.1 客製平面圖 SCADA HMI -->
+        <div class="card">
+
+          <div class="scada-hmi-container">
+            <!-- SVG SCADA Graphic Architecture (Matches Fig 4.1 Exactly) -->
+            <svg class="scada-diagram" viewBox="0 0 1000 480" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <!-- Water gradient -->
+                <linearGradient id="waterGradSed" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#0284c7" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#0369a1" stop-opacity="0.8"/>
+                </linearGradient>
+                <linearGradient id="waterGradClean" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#0891b2" stop-opacity="0.9"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Background Grid -->
+              <rect x="0" y="0" width="1000" height="480" fill="#0b1120" rx="10"/>
+
+              <!-- ================= 沉澱池 (Sedimentation Tank) ================= -->
+              <g transform="translate(740, 220)">
+                <rect x="0" y="0" width="220" height="180" fill="url(#waterGradSed)" stroke="#38bdf8" stroke-width="2" rx="6"/>
+                <rect x="0" y="0" width="220" height="30" fill="rgba(15,23,42,0.6)"/>
+                <text x="110" y="20" font-family="Outfit" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">沉澱池</text>
+                
+                <!-- pH Probe Sedimentation -->
+                <rect x="40" y="40" width="14" height="90" fill="#334155" rx="3"/>
+                <rect x="36" y="130" width="22" height="25" fill="#10b981" rx="2"/>
+                <text x="47" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">pH485-A-C-N</text>
+
+                <!-- ORP Probe Sedimentation -->
+                <rect x="140" y="40" width="14" height="90" fill="#334155" rx="3"/>
+                <rect x="136" y="130" width="22" height="25" fill="#f59e0b" rx="2"/>
+                <text x="147" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">ORP485-A-C-N</text>
+
+                <!-- Cleaning Bubbles animation -->
+                <circle id="sed-bubble-1" class="air-bubble-pulse" cx="47" cy="140" r="4" fill="#38bdf8"/>
+                <circle id="sed-bubble-2" class="air-bubble-pulse" cx="147" cy="140" r="4" fill="#38bdf8"/>
+              </g>
+
+              <!-- 沉澱池 485集線器 -->
+              <g transform="translate(760, 60)">
+                <rect x="0" y="0" width="180" height="90" fill="#1e293b" stroke="#00f2fe" stroke-width="2" rx="6"/>
+                <text x="90" y="25" font-family="Outfit" font-size="12" font-weight="700" fill="#00f2fe" text-anchor="middle">485 集線器 (12V供電 6頻道)</text>
+                <text x="90" y="45" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">HUB485-300-12V-6CH-N</text>
+                <circle cx="20" cy="68" r="6" fill="#10b981" id="hub-sed-led"/>
+                <text x="32" y="72" font-family="Outfit" font-size="10" fill="#e2e8f0">RS-485 Active</text>
+              </g>
+
+              <!-- ================= 清水池 (Clean Water Reservoir) ================= -->
+              <g transform="translate(40, 220)">
+                <rect x="0" y="0" width="220" height="180" fill="url(#waterGradClean)" stroke="#06b6d4" stroke-width="2" rx="6"/>
+                <rect x="0" y="0" width="220" height="30" fill="rgba(15,23,42,0.6)"/>
+                <text x="110" y="20" font-family="Outfit" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">清水池</text>
+                
+                <!-- pH Probe Clean Water -->
+                <rect x="40" y="40" width="14" height="90" fill="#334155" rx="3"/>
+                <rect x="36" y="130" width="22" height="25" fill="#10b981" rx="2"/>
+                <text x="47" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">pH485-A-C-N</text>
+
+                <!-- ORP Probe Clean Water -->
+                <rect x="110" y="40" width="14" height="90" fill="#334155" rx="3"/>
+                <rect x="106" y="130" width="22" height="25" fill="#f59e0b" rx="2"/>
+                <text x="117" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">ORP485-A-C-N</text>
+
+                <!-- Float Water Level Switch -->
+                <rect x="170" y="80" width="26" height="36" fill="#64748b" rx="4" stroke="#94a3b8"/>
+                <text x="183" y="102" font-family="Outfit" font-size="10" fill="#fff" font-weight="bold" text-anchor="middle">浮球</text>
+                <text x="183" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">水位開關(DI1)</text>
+
+                <!-- Cleaning Bubbles animation -->
+                <circle id="clean-bubble-1" class="air-bubble-pulse" cx="47" cy="140" r="4" fill="#38bdf8"/>
+                <circle id="clean-bubble-2" class="air-bubble-pulse" cx="117" cy="140" r="4" fill="#38bdf8"/>
+              </g>
+
+              <!-- 清水池 485集線器 -->
+              <g transform="translate(60, 60)">
+                <rect x="0" y="0" width="180" height="90" fill="#1e293b" stroke="#00f2fe" stroke-width="2" rx="6"/>
+                <text x="90" y="25" font-family="Outfit" font-size="12" font-weight="700" fill="#00f2fe" text-anchor="middle">485 集線器 (12V供電 6頻道)</text>
+                <text x="90" y="45" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">HUB485-300-12V-6CH-N</text>
+                <circle cx="20" cy="68" r="6" fill="#10b981" id="hub-clean-led"/>
+                <text x="32" y="72" font-family="Outfit" font-size="10" fill="#e2e8f0">RS-485 Active</text>
+              </g>
+
+              <!-- ================= 中央 IoT 智能邏輯控制系統 DO4-ABS-N (Smart Box) ================= -->
+              <g transform="translate(370, 80)">
+                <rect x="0" y="0" width="260" height="280" fill="#0f172a" stroke="#38bdf8" stroke-width="3" rx="12"/>
+                <rect x="10" y="10" width="240" height="40" fill="#1e293b" rx="6"/>
+                <text x="130" y="35" font-family="Outfit" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">IoT 智能邏輯控制系統</text>
+                <text x="130" y="70" font-family="Outfit" font-size="13" font-weight="600" fill="#00f2fe" text-anchor="middle">DO4-ABS-N (Smart Box)</text>
+                
+                <!-- Smart Box Controller Status LEDs -->
+                <g transform="translate(25, 90)">
+                  <circle cx="15" cy="15" r="7" fill="#10b981" id="led-pwr"/>
+                  <text x="30" y="19" font-family="Outfit" font-size="11" fill="#e2e8f0">PWR</text>
+
+                  <circle cx="95" cy="15" r="7" fill="#10b981" id="led-run"/>
+                  <text x="110" y="19" font-family="Outfit" font-size="11" fill="#e2e8f0">SYS RUN</text>
+
+                  <circle cx="175" cy="15" r="7" fill="#38bdf8" id="led-wifi"/>
+                  <text x="190" y="19" font-family="Outfit" font-size="11" fill="#e2e8f0">Wi-Fi</text>
+                </g>
+
+                <!-- Relay Outputs Display -->
+                <rect x="20" y="130" width="220" height="120" fill="#1e293b" rx="6" stroke="#334155"/>
+                <text x="130" y="150" font-family="Outfit" font-size="11" font-weight="600" fill="#94a3b8" text-anchor="middle">RELAY DO 驅動輸出與 DI 連動</text>
+
+                <!-- Relay 1 (Sand Filter Pump A) -->
+                <circle cx="45" cy="180" r="8" fill="#10b981" id="svg-relay-1"/>
+                <text x="45" y="202" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">Relay 1</text>
+                <text x="45" y="215" font-family="Outfit" font-size="9" fill="#94a3b8" text-anchor="middle">砂濾泵 A</text>
+
+                <!-- Relay 2 (Sand Filter Pump B) -->
+                <circle cx="100" cy="180" r="8" fill="#64748b" id="svg-relay-2"/>
+                <text x="100" y="202" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">Relay 2</text>
+                <text x="100" y="215" font-family="Outfit" font-size="9" fill="#94a3b8" text-anchor="middle">砂濾泵 B</text>
+
+                <!-- Relay 3 (Dosing Pump) -->
+                <circle cx="155" cy="180" r="8" fill="#10b981" id="svg-relay-3"/>
+                <text x="155" y="202" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">Relay 3</text>
+                <text x="155" y="215" font-family="Outfit" font-size="9" fill="#94a3b8" text-anchor="middle">加藥泵</text>
+
+                <!-- Relay 4 (Alarm/Air Clean) -->
+                <circle cx="210" cy="180" r="8" fill="#38bdf8" id="svg-relay-4"/>
+                <text x="210" y="202" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">Relay 4</text>
+                <text x="210" y="215" font-family="Outfit" font-size="9" fill="#94a3b8" text-anchor="middle">空氣清洗</text>
+              </g>
+
+              <!-- Lines & Bus Connections -->
+              <!-- RS-485 Line Clean Water -> Controller -->
+              <path d="M 240,105 L 370,140" stroke="#00f2fe" stroke-width="3" fill="none" class="water-flow-line"/>
+              <text x="300" y="115" font-family="Outfit" font-size="11" fill="#00f2fe" font-weight="bold">RS-485</text>
+
+              <!-- RS-485 Line Sedimentation -> Controller -->
+              <path d="M 760,105 L 630,140" stroke="#00f2fe" stroke-width="3" fill="none" class="water-flow-line"/>
+              <text x="690" y="115" font-family="Outfit" font-size="11" fill="#00f2fe" font-weight="bold">RS-485</text>
+
+              <!-- Control lines from Smart Box DO4 Relays to Pumps -->
+              <path d="M 415,340 L 405,390" stroke="#10b981" stroke-width="2" stroke-dasharray="3,3"/>
+              <path d="M 470,340 L 500,390" stroke="#64748b" stroke-width="2" stroke-dasharray="3,3"/>
+              <path d="M 525,340 L 595,390" stroke="#f59e0b" stroke-width="2" stroke-dasharray="3,3"/>
+
+              <g transform="translate(370, 390)">
+                <!-- Sand Filter Pump A Icon & Animation -->
+                <rect x="0" y="0" width="70" height="45" fill="#1e293b" stroke="#10b981" stroke-width="2" rx="6"/>
+                <circle cx="35" cy="22.5" r="13" fill="#334155" stroke="#10b981"/>
+                <g class="pump-rotation" id="anim-pump-a" transform="translate(35, 22.5)">
+                  <line x1="-9" y1="0" x2="9" y2="0" stroke="#00f2fe" stroke-width="3"/>
+                  <line x1="0" y1="-9" x2="0" y2="9" stroke="#00f2fe" stroke-width="3"/>
+                </g>
+                <text x="35" y="58" font-family="Outfit" font-size="10" fill="#ffffff" text-anchor="middle">砂濾泵 A (既有)</text>
+
+                <!-- Sand Filter Pump B Icon & Animation -->
+                <rect x="95" y="0" width="70" height="45" fill="#1e293b" stroke="#64748b" stroke-width="2" rx="6"/>
+                <circle cx="130" cy="22.5" r="13" fill="#334155" stroke="#64748b"/>
+                <g class="pump-rotation pump-stopped" id="anim-pump-b" transform="translate(130, 22.5)">
+                  <line x1="-9" y1="0" x2="9" y2="0" stroke="#64748b" stroke-width="3"/>
+                  <line x1="0" y1="-9" x2="0" y2="9" stroke="#64748b" stroke-width="3"/>
+                </g>
+                <text x="130" y="58" font-family="Outfit" font-size="10" fill="#ffffff" text-anchor="middle">砂濾泵 B (既有)</text>
+
+                <!-- Dosing Pump Icon & Animation -->
+                <rect x="190" y="0" width="70" height="45" fill="#1e293b" stroke="#f59e0b" stroke-width="2" rx="6"/>
+                <circle cx="225" cy="22.5" r="13" fill="#334155" stroke="#f59e0b"/>
+                <g class="pump-rotation" id="anim-pump-dose" transform="translate(225, 22.5)">
+                  <polygon points="0,-9 7,7 -7,7" fill="#f59e0b"/>
+                </g>
+                <text x="225" y="58" font-family="Outfit" font-size="10" fill="#ffffff" text-anchor="middle">加藥泵 (連動)</text>
+              </g>
+
+            </svg>
+          </div>
+        </div>
+
+        <!-- 右側即時警報與日誌 Event Log -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-bell text-amber"></i> 水質警報與自動控制日誌
+            </div>
+            <span class="status-badge" style="background: rgba(16,185,129,0.1); border-color: var(--accent-green);" id="badge-log-count">
+              運轉正常
+            </span>
+          </div>
+
+          <div style="height: 480px; overflow-y: auto;" id="event-log-container">
+            <div class="modbus-line">
+              <span class="modbus-time">[06:00:00]</span>
+              <span class="modbus-hex">SYS_OK</span>
+              <span class="modbus-desc">系統完成連線，沉澱池/清水池 RS-485 正常通訊中</span>
+            </div>
+            <div class="modbus-line">
+              <span class="modbus-time">[05:30:12]</span>
+              <span class="modbus-hex">PUMP_SW</span>
+              <span class="modbus-desc">清水池水位到達設定下限，DO4 控制器自動切換啟動砂濾泵 A 與加藥泵</span>
+            </div>
+            <div class="modbus-line">
+              <span class="modbus-time">[04:00:00]</span>
+              <span class="modbus-hex">AIR_CLEAN</span>
+              <span class="modbus-desc">觸發 12VDC 空氣泵 30s 脈衝，執行感測器電極自動噴氣清洗</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================================
+         Tab 2: 現場可動化控制面板 (DO4 Smart Box Field Controller)
+         ============================================================ -->
+    <div id="tab-field-ctrl" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-sliders text-cyan"></i> Smart Box DO4-ABS-N 現場可動化控制面板 (交互式硬體控制器)
+          </div>
+          <div>
+            <span class="status-badge" style="background: rgba(0,242,254,0.1); border-color: var(--primary-cyan);">
+              IP67 ABS 防水箱體 (現場實體視覺)
+            </span>
+          </div>
+        </div>
+
+        <div class="field-controller-chassis">
+          <!-- Screws -->
+          <div class="chassis-screw screw-tl"></div>
+          <div class="chassis-screw screw-tr"></div>
+          <div class="chassis-screw screw-bl"></div>
+          <div class="chassis-screw screw-br"></div>
+
+          <div class="controller-header-bar">
+            <div>
+              <span class="controller-model">MODEL: DO4-ABS-N (Smart Box)</span>
+              <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.2rem;">
+                IoT 智能邏輯控制系統 | 4 組 Relay DO 輸出 | 2 點 DI 數位輸入 | RS-485 雙集線器彙集
+              </p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <span class="switch-label">運轉模式:</span>
+              <label class="switch">
+                <input type="checkbox" id="switch-auto-manual" checked>
+                <span class="slider"></span>
+              </label>
+              <span id="text-ctrl-mode" style="font-weight: 700; color: var(--accent-green);">AUTO (自動交替)</span>
+            </div>
+          </div>
+
+          <div class="control-panel-grid">
+            
+            <!-- Panel Block 1: Relay DO Outputs -->
+            <div class="panel-block">
+              <div class="panel-block-title">
+                <span>Relay 繼電器輸出 (4組)</span>
+                <i class="fa-solid fa-bolt text-amber"></i>
+              </div>
+
+              <!-- Relay 1 Sand Filter Pump A -->
+              <div class="toggle-switch-group">
+                <div>
+                  <div class="switch-label">Relay 1: 砂濾泵 A (現場既有)</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">交替運轉馬達 A</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="ctrl-relay-1" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Relay 2 Sand Filter Pump B -->
+              <div class="toggle-switch-group">
+                <div>
+                  <div class="switch-label">Relay 2: 砂濾泵 B (現場既有)</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">交替運轉馬達 B</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="ctrl-relay-2">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Relay 3 Dosing Pump -->
+              <div class="toggle-switch-group">
+                <div>
+                  <div class="switch-label">Relay 3: 次氯酸鈉加藥泵</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">水流建立自動連動</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="ctrl-relay-3" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Relay 4 Air Clean Pulse -->
+              <div class="toggle-switch-group">
+                <div>
+                  <div class="switch-label">Relay 4: 電極噴氣自動清洗</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">12VDC 空氣泵脈衝</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="ctrl-relay-4">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Panel Block 2: DI Inputs & Water Level Trigger -->
+            <div class="panel-block">
+              <div class="panel-block-title">
+                <span>DI 數位輸入 (清水池浮球開關)</span>
+                <i class="fa-solid fa-water text-cyan"></i>
+              </div>
+
+              <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem;">
+                點擊按紐模擬浮球水位變化，觀察 Smart Box DO4 如何執行「雙泵交替」與「加藥連動」：
+              </p>
+
+              <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                <button class="industrial-btn cyan" id="btn-sim-low-level">
+                  <i class="fa-solid fa-arrow-down"></i> 模擬 DI1 觸發：水位過低 (補水啟泵)
+                </button>
+                <button class="industrial-btn amber" id="btn-sim-high-level">
+                  <i class="fa-solid fa-arrow-up"></i> 模擬 DI1 觸發：水位過高 (水滿停泵)
+                </button>
+                <button class="industrial-btn" id="btn-trigger-air-clean">
+                  <i class="fa-solid fa-wind"></i> 手動觸發 12VDC 電極空氣清洗 (30秒)
+                </button>
+              </div>
+            </div>
+
+            <!-- Panel Block 3: Interactive Water Parameter Sliders -->
+            <div class="panel-block">
+              <div class="panel-block-title">
+                <span>水質參數現場可動化微調</span>
+                <i class="fa-solid fa-gauge text-green"></i>
+              </div>
+
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                  <span>沉澱池原水 pH 微調:</span>
+                  <strong id="slider-val-ph" class="text-cyan">7.14 pH</strong>
+                </div>
+                <input type="range" id="slider-ph" min="5.0" max="10.0" step="0.05" value="7.14" style="width: 100%; margin-top: 0.4rem;">
+              </div>
+
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                  <span>沉澱池原水 ORP (mV) 微調:</span>
+                  <strong id="slider-val-orp" class="text-amber">485 mV</strong>
+                </div>
+                <input type="range" id="slider-orp" min="300" max="900" step="5" value="485" style="width: 100%; margin-top: 0.4rem;">
+              </div>
+
+              <p style="font-size: 0.75rem; color: var(--text-muted);">
+                💡 拖動滑桿可直接測試系統對「暴雨原水有機物暴增」及「消毒效能不足」之警報聯鎖反應！
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         Tab 3: 雙師教學與 PBL 亮點展示
+         ============================================================ -->
+    <div id="tab-education" class="tab-panel">
+      <div class="dashboard-grid">
+        
+        <!-- 左側：Modbus RTU 工業訊號流 & NIEA 實驗室 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-code-compare text-cyan"></i> Modbus RTU / RS-485 工業訊號流透視器 (職安系物聯感測)
+            </div>
+            <button class="industrial-btn cyan" id="btn-toggle-modbus" style="padding: 0.3rem 0.8rem;">
+              <i class="fa-solid fa-pause"></i> 暫停串流
+            </button>
+          </div>
+
+          <div class="modbus-terminal" id="modbus-stream-box">
+            <!-- Modbus Packets will stream here live -->
+          </div>
+
+          <div style="margin-top: 1.5rem;" class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-flask-vial text-green"></i> NIEA 標準檢測與線上感測對比對數迴歸 (環工系水質分析)
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.8rem;">
+                  輸入人工採樣 NIEA DPD 自由有效餘氯檢測值 (mg/L)，建立專屬相關曲線：
+                </p>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.8rem;">
+                  <input type="number" id="input-dpd-val" placeholder="例如 0.58" step="0.01" style="background:#1e293b; border:1px solid #334155; color:#fff; padding:0.5rem; border-radius:6px; width:120px;">
+                  <button class="industrial-btn green" id="btn-add-dpd-point">校驗紀錄</button>
+                </div>
+                <div style="font-family: var(--font-code); font-size: 0.85rem; color: var(--primary-cyan); background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px;">
+                  迴歸方程式: <br>
+                  <strong id="equation-text">ORP (mV) = 145.2 × ln(DPD) + 788.4</strong><br>
+                  <span style="color: var(--accent-green);">決定係數 R² = 0.9842 (高度相關)</span>
+                </div>
+              </div>
+
+              <div>
+                <canvas id="chartRegression" height="140"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側：PBL 闖關遊戲與 ESG SROI 戰情 -->
+        <div>
+          <div class="card pbl-badge-card" style="margin-bottom: 1.5rem;">
+            <div class="badge-icon">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <h3 style="color: #fff; margin-bottom: 0.4rem;">PBL 智慧水務工程師闖關遊戲</h3>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem;">
+              情境：「大雨過後原水有機物暴增」，請調整加藥泵與過濾切換，維持飲用水法規水質！
+            </p>
+            <button class="industrial-btn amber" id="btn-start-pbl-challenge">
+              <i class="fa-solid fa-gamepad"></i> 開始 PBL 闖關挑戰
+            </button>
+          </div>
+
+          <!-- ESG & SROI 戰情板 -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-chart-pie text-purple"></i> ESG 淨零減碳與 SROI 2.85:1 社會效益
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+              <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border-left: 3px solid var(--accent-green);">
+                <div style="font-size: 0.8rem; color: #94a3b8;">次氯酸鈉消毒藥劑精準節約率</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: var(--accent-green);">20% 節藥減浪費</div>
+              </div>
+
+              <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border-left: 3px solid var(--primary-cyan);">
+                <div style="font-size: 0.8rem; color: #94a3b8;">砂濾泵交替運轉與消除空轉節能</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary-cyan);">15% 節省電力耗損</div>
+              </div>
+
+              <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border-left: 3px solid var(--accent-purple);">
+                <div style="font-size: 0.8rem; color: #94a3b8;">SROI 社會投資報酬率 (投入42萬創120萬價值)</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: var(--accent-purple);">SROI = 2.85 : 1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================================
+         Tab 4: 資料匯入與動態模擬器
+         ============================================================ -->
+    <div id="tab-import" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-file-csv text-cyan"></i> 水質歷史 Log 與檢測數據檔案匯入 (CSV / Excel)
+          </div>
+        </div>
+
+        <div style="border: 2px dashed var(--border-color); border-radius: 12px; padding: 2.5rem; text-align: center; background: rgba(0,0,0,0.2);" id="drop-zone">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.5rem; color: var(--primary-cyan); margin-bottom: 1rem;"></i>
+          <h3>拖曳 CSV 或 Excel 水質歷史檔案至此</h3>
+          <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
+            支援包含 Timestamp, pH, ORP, 餘氯, 泵浦狀態之連續數據檔 (或點擊下方載入範例數據 sample_data.csv)
+          </p>
+          <div style="margin-top: 1.2rem; display: flex; justify-content: center; gap: 1rem;">
+            <input type="file" id="file-input" accept=".csv" style="display: none;">
+            <button class="industrial-btn cyan" onclick="document.getElementById('file-input').click()">
+              <i class="fa-solid fa-folder-open"></i> 瀏覽電腦檔案
+            </button>
+            <button class="industrial-btn green" id="btn-load-sample">
+              <i class="fa-solid fa-database"></i> 一鍵載入計畫範例檔 (sample_data.csv)
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <h4 style="color: #fff; margin-bottom: 0.8rem;">匯入數據預覽與時序校驗</h4>
+          <div style="max-height: 250px; overflow-y: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>時間戳記</th>
+                  <th>沉澱池 pH</th>
+                  <th>沉澱池 ORP</th>
+                  <th>清水池 pH</th>
+                  <th>清水池 ORP</th>
+                  <th>推算餘氯</th>
+                  <th>泵浦 A 狀態</th>
+                  <th>泵浦 B 狀態</th>
+                  <th>備註說明</th>
+                </tr>
+              </thead>
+              <tbody id="table-imported-body">
+                <!-- Data populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         Tab 5: 長期數據整理與法定報表
+         ============================================================ -->
+    <div id="tab-reports" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-file-signature text-cyan"></i> 《飲用水管理條例》法定備查與設備維護紀錄表 (保存2年)
+          </div>
+          <div style="display: flex; gap: 0.8rem;" class="no-print">
+            <button class="industrial-btn green" id="btn-export-csv">
+              <i class="fa-solid fa-file-excel"></i> 匯出 CSV 數據庫
+            </button>
+            <button class="industrial-btn cyan" onclick="window.print()">
+              <i class="fa-solid fa-print"></i> 友善列印 / 存為 PDF 報表
+            </button>
+          </div>
+        </div>
+
+        <!-- 趨勢圖表 -->
+        <div style="margin-bottom: 2rem;">
+          <canvas id="chartLongTerm" height="100"></canvas>
+        </div>
+
+        <!-- 法定報表預覽 (Print-Ready Document) -->
+        <div style="background: #fff; color: #000; padding: 2rem; border-radius: 8px;" id="printable-report">
+          <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 1rem; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.4rem; font-weight: 700;">輔英科技大學 水源地水質設備連續維護與監測紀錄表</h2>
+            <p style="font-size: 0.9rem; margin-top: 0.4rem;">
+              依據《飲用水管理條例》及《飲用水連續供水固定設備使用及維護管理辦法》第七條規定保存二年
+            </p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 0.85rem; margin-bottom: 1rem;">
+            <div>管理單位：總務處營繕組 / 環生學院</div>
+            <div>設置地點：輔英科技大學校區自設水源地淨水場</div>
+            <div>監控設備：Smart Box DO4-ABS-N / JNC SCADA</div>
+            <div>備查週期：月維護、每季大腸桿菌與硝酸鹽氮檢測</div>
+          </div>
+
+          <table class="data-table" style="color: #000;">
+            <thead>
+              <tr style="background: #f1f5f9; color: #000;">
+                <th style="color:#000;">日期</th>
+                <th style="color:#000;">沉澱池 pH</th>
+                <th style="color:#000;">沉澱池 ORP</th>
+                <th style="color:#000;">清水池 pH</th>
+                <th style="color:#000;">清水池 ORP</th>
+                <th style="color:#000;">自由餘氯(mg/L)</th>
+                <th style="color:#000;">電極自動清洗</th>
+                <th style="color:#000;">法規合規判定</th>
+                <th style="color:#000;">查核簽章</th>
+              </tr>
+            </thead>
+            <tbody id="table-statutory-body">
+              <!-- Report rows -->
+            </tbody>
+          </table>
+
+          <div style="margin-top: 2rem; display: flex; justify-content: space-between; font-size: 0.85rem;">
+            <div>巡檢人員簽章：__________________</div>
+            <div>營繕組主管：__________________</div>
+            <div>環安衛中心主管：__________________</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Application JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>
