@@ -1403,6 +1403,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 45000);
   });
 
+  // Link button from tab-education "開啟化學解離與 pH 物種分佈實驗室"
+  document.getElementById('btn-goto-speciation-lab')?.addEventListener('click', () => {
+    const specTabBtn = document.querySelector('[data-tab="tab-speciation-game"]');
+    if (specTabBtn) specTabBtn.click();
+  });
+
   // Initial calculation
   calcPhSpeciation(7.2, 0.60);
 

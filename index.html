@@ -67,6 +67,9 @@
     <button class="nav-tab" data-tab="tab-chlorine-game">
       <i class="fa-solid fa-gamepad text-cyan"></i> 加氯 / 減氯水質控制互動遊戲
     </button>
+    <button class="nav-tab" data-tab="tab-speciation-game">
+      <i class="fa-solid fa-atom text-purple"></i> 氯氣 / 次氯酸鈉反應與 pH 物種分佈實驗室
+    </button>
   </nav>
 
   <!-- 主內容區域 -->
@@ -548,6 +551,25 @@
             </button>
           </div>
 
+          <!-- 化學解離與 pH 物種分佈教具亮點卡片 -->
+          <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(139, 92, 246, 0.2)); border: 1px solid var(--accent-purple);">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.6rem;">
+              <div class="badge-icon" style="background: rgba(139, 92, 246, 0.3); color: #c084fc;">
+                <i class="fa-solid fa-atom"></i>
+              </div>
+              <div>
+                <h3 style="color: #fff; margin: 0; font-size: 1.1rem;">氯氣 / 次氯酸鈉水體反應與 pH 物種分佈實驗室</h3>
+                <span style="font-size: 0.75rem; color: #a78bfa;">雙師化學重點教具 (pKₐ = 7.53 解離曲線)</span>
+              </div>
+            </div>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem;">
+              展示 Cl₂ 酸性水解與 NaOCl 鹼性水解差異，動態分析不同 pH 下 HOCl (強殺菌) 與 OCl⁻ (弱殺菌) 物種分佈與黃金消毒區間！
+            </p>
+            <button class="industrial-btn purple" id="btn-goto-speciation-lab">
+              <i class="fa-solid fa-flask"></i> 開啟化學解離與 pH 物種分佈實驗室
+            </button>
+          </div>
+
           <!-- ESG & SROI 戰情計算器板 -->
           <div class="card">
             <div class="card-header">
@@ -919,17 +941,6 @@
                 <input type="range" id="cg-slider-naocl" min="0" max="100" value="35" style="width: 100%; accent-color: #38bdf8; cursor: pointer;">
               </div>
 
-              <!-- NaHSO3 減氯泵滑桿 -->
-              <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                  <label style="font-size: 0.85rem; color: #34d399; font-weight: 700;">
-                    <i class="fa-solid fa-minus-circle"></i> 亞硫酸氫鈉 NaHSO₃ 中和量：
-                  </label>
-                  <span style="font-family: var(--font-code); font-size: 0.95rem; font-weight: 800; color: #34d399;" id="cg-val-nahso3-rate">0 mL/min</span>
-                </div>
-                <input type="range" id="cg-slider-nahso3" min="0" max="100" value="0" style="width: 100%; accent-color: #34d399; cursor: pointer;">
-              </div>
-
             </div>
 
             <!-- 原水流量與有機物負擔控制 -->
@@ -1006,15 +1017,27 @@
         </div>
 
       </div>
+    </div>
 
-      <!-- 化學反應原理與不同 pH 物種分佈互動實驗室 (Disinfection Chemistry & pH Speciation Simulator) -->
-      <div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(139, 92, 246, 0.1)); border: 1px solid var(--accent-purple);">
+    <!-- ============================================================
+         Tab 7: 氯氣 / 次氯酸鈉反應與 pH 物種分佈實驗室
+         ============================================================ -->
+    <div id="tab-speciation-game" class="tab-panel">
+      <div class="card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(139, 92, 246, 0.15)); border: 1px solid var(--accent-purple);">
         <div class="card-header" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.8rem; margin-bottom: 1.2rem;">
-          <div class="card-title">
-            <i class="fa-solid fa-atom text-purple" style="font-size: 1.2rem;"></i> 水務化學原理：氯氣 / 次氯酸鈉反應與 pH 物種分佈動態實驗室
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.3rem;">
+              <span class="status-badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; font-weight: bold; border-color: #8b5cf6;">
+                <i class="fa-solid fa-atom"></i> 水務化學熱力學動態實驗室
+              </span>
+              <h2 style="font-size: 1.4rem; color: #fff; margin: 0;">氯氣 / 次氯酸鈉反應與 pH 物種分佈動態實驗室</h2>
+            </div>
+            <p style="font-size: 0.85rem; color: #94a3b8;">
+              動態切換 Cl₂ 氣體水解 (酸性趨勢) 與 NaOCl 次氯酸鈉 (鹼性趨勢)，實時計算不同 pH 下強效 HOCl 與弱效 OCl⁻ 物種解離平衡與殺菌效能！
+            </p>
           </div>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <button class="industrial-btn purple" id="btn-ph-challenge" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            <button class="industrial-btn purple" id="btn-ph-challenge" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
               <i class="fa-solid fa-trophy"></i> 啟動 pH 黃金區間配比挑戰闖關
             </button>
           </div>
@@ -1065,6 +1088,86 @@
                   <span style="font-family: var(--font-code); font-size: 1.1rem; font-weight: 800; color: var(--primary-cyan);" id="speciation-ph-val">7.20 pH</span>
                 </div>
                 <input type="range" id="slider-speciation-ph" min="4.0" max="10.0" step="0.1" value="7.2" style="width: 100%; accent-color: var(--primary-cyan); cursor: pointer;">
+              </div>
+
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                  <label style="font-size: 0.85rem; color: #fff; font-weight: 700;">
+                    <i class="fa-solid fa-flask text-green"></i> 總游離有效餘氯 (Total Free Chlorine):
+                  </label>
+                  <span style="font-family: var(--font-code); font-size: 1rem; font-weight: 800; color: var(--accent-green);" id="speciation-dose-val">0.60 mg/L</span>
+                </div>
+                <input type="range" id="slider-speciation-dose" min="0.1" max="3.0" step="0.05" value="0.60" style="width: 100%; accent-color: var(--accent-green); cursor: pointer;">
+              </div>
+
+              <!-- 滴定微調按鈕：加酸 HCl / 加鹼 NaOH -->
+              <div style="display: flex; gap: 0.8rem;">
+                <button class="industrial-btn amber" id="btn-titrate-hcl" style="flex: 1; padding: 0.4rem; font-size: 0.78rem;">
+                  <i class="fa-solid fa-flask-vial"></i> 滴定加酸 (HCl 降 pH)
+                </button>
+                <button class="industrial-btn green" id="btn-titrate-naoh" style="flex: 1; padding: 0.4rem; font-size: 0.78rem;">
+                  <i class="fa-solid fa-flask-vial"></i> 滴定加鹼 (NaOH 升 pH)
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 右側：Chart.js 物種曲線與即時指標卡 -->
+          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+            
+            <!-- 即時物種濃度與相對殺菌力卡片 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
+              <div class="metric-card cyan" style="padding: 0.8rem;">
+                <div class="metric-label" style="font-size: 0.75rem;">[HOCl] 次氯酸 (強殺菌)</div>
+                <div class="metric-value" style="font-size: 1.2rem;" id="spec-val-hocl">0.41 <span class="metric-unit">mg/L</span></div>
+                <div class="metric-sub" style="font-size: 0.7rem; color: var(--primary-cyan);" id="spec-pct-hocl">佔比 68.1%</div>
+              </div>
+
+              <div class="metric-card green" style="padding: 0.8rem;">
+                <div class="metric-label" style="font-size: 0.75rem;">[OCl⁻] 次氯酸根 (弱殺菌)</div>
+                <div class="metric-value" style="font-size: 1.2rem;" id="spec-val-ocl">0.19 <span class="metric-unit">mg/L</span></div>
+                <div class="metric-sub" style="font-size: 0.7rem; color: var(--accent-green);" id="spec-pct-ocl">佔比 31.9%</div>
+              </div>
+
+              <div class="metric-card purple" style="padding: 0.8rem;">
+                <div class="metric-label" style="font-size: 0.75rem;">相對殺菌效能指數</div>
+                <div class="metric-value" style="font-size: 1.2rem;" id="spec-val-power">68.5 <span class="metric-unit">%</span></div>
+                <div class="metric-sub" style="font-size: 0.7rem;" id="spec-sub-power">黃金最佳消毒區</div>
+              </div>
+            </div>
+
+            <!-- Chart.js 解離曲線圖卡片 -->
+            <div style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.85rem; font-weight: 700; color: #fff;">
+                  <i class="fa-solid fa-chart-area text-purple"></i> pH 物種熱力學平衡解離曲線 (Speciation Curve)
+                </span>
+                <span class="status-badge" style="font-size: 0.7rem; background: rgba(139, 92, 246, 0.2); color: #c084fc; border-color: #8b5cf6;" id="speciation-zone-tag">
+                  黃金消毒區 (pH 6.5 ~ 7.5)
+                </span>
+              </div>
+
+              <div style="position: relative; height: 210px; width: 100%;">
+                <canvas id="chartPhSpeciation"></canvas>
+              </div>
+
+              <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.4rem; display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa-solid fa-circle" style="color:#00f2fe;"></i> HOCl (次氯酸)</span>
+                <span><i class="fa-solid fa-circle" style="color:#10b981;"></i> OCl⁻ (次氯酸根)</span>
+                <span><i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> 當前 pH 追蹤游標</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>      </div>
+
+        </div>
+      </div>
+    </div>100%; accent-color: var(--primary-cyan); cursor: pointer;">
               </div>
 
               <div style="margin-bottom: 1rem;">
