@@ -432,6 +432,87 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ============================================================
+  // Tab 3: SROI 社會投資報酬率與 ESG 動態計算器
+  // ============================================================
+  function calculateSROI() {
+    const capital = parseFloat(document.getElementById('sroi-input-capital')?.value) || 420000;
+    const fines = parseFloat(document.getElementById('sroi-input-fines')?.value) || 0;
+    const savings = parseFloat(document.getElementById('sroi-input-savings')?.value) || 0;
+    const maintenance = parseFloat(document.getElementById('sroi-input-maintenance')?.value) || 0;
+    const student = parseFloat(document.getElementById('sroi-input-student')?.value) || 0;
+
+    const totalOutcomes = fines + savings + maintenance + student;
+    const sroiRatio = capital > 0 ? (totalOutcomes / capital) : 0;
+
+    const ratioDisplay = document.getElementById('sroi-ratio-display');
+    const totalDisplay = document.getElementById('sroi-total-outcomes');
+    const statusDisplay = document.getElementById('sroi-status-text');
+    const esgDisplay = document.getElementById('sroi-esg-rates');
+
+    if (ratioDisplay) {
+      ratioDisplay.textContent = `SROI = ${sroiRatio.toFixed(2)} : 1`;
+    }
+    if (totalDisplay) {
+      totalDisplay.textContent = `NT$ ${Math.round(totalOutcomes).toLocaleString()}`;
+    }
+
+    if (statusDisplay) {
+      if (sroiRatio >= 2.5) {
+        statusDisplay.textContent = `🌟 卓越評等：每投入 1 元資本，創造 ${sroiRatio.toFixed(2)} 元社會效益`;
+        statusDisplay.style.color = 'var(--accent-green)';
+      } else if (sroiRatio >= 1.5) {
+        statusDisplay.textContent = `✅ 良好評等：每投入 1 元資本，創造 ${sroiRatio.toFixed(2)} 元社會效益`;
+        statusDisplay.style.color = 'var(--primary-cyan)';
+      } else {
+        statusDisplay.textContent = `⚠️ 基礎評等：每投入 1 元資本，創造 ${sroiRatio.toFixed(2)} 元社會效益`;
+        statusDisplay.style.color = 'var(--accent-amber)';
+      }
+    }
+
+    if (esgDisplay) {
+      const chemPct = Math.round((savings / 120000) * 20);
+      const powerPct = Math.round((savings / 120000) * 15);
+      esgDisplay.textContent = `節藥 ${chemPct}% | 節電 ${powerPct}%`;
+    }
+  }
+
+  // 監聽數值欄位輸入
+  ['sroi-input-capital', 'sroi-input-fines', 'sroi-input-savings', 'sroi-input-maintenance', 'sroi-input-student'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      const presetSelect = document.getElementById('sroi-preset-select');
+      if (presetSelect) presetSelect.value = 'custom';
+      calculateSROI();
+    });
+  });
+
+  // 預設下拉選單切換
+  document.getElementById('sroi-preset-select')?.addEventListener('change', (e) => {
+    const val = e.target.value;
+    if (val === 'baseline') {
+      document.getElementById('sroi-input-capital').value = 420000;
+      document.getElementById('sroi-input-fines').value = 300000;
+      document.getElementById('sroi-input-savings').value = 120000;
+      document.getElementById('sroi-input-maintenance').value = 80000;
+      document.getElementById('sroi-input-student').value = 700000;
+    } else if (val === 'conservative') {
+      document.getElementById('sroi-input-capital').value = 420000;
+      document.getElementById('sroi-input-fines').value = 150000;
+      document.getElementById('sroi-input-savings').value = 80000;
+      document.getElementById('sroi-input-maintenance').value = 40000;
+      document.getElementById('sroi-input-student').value = 486000;
+    } else if (val === 'optimistic') {
+      document.getElementById('sroi-input-capital').value = 420000;
+      document.getElementById('sroi-input-fines').value = 400000;
+      document.getElementById('sroi-input-savings').value = 160000;
+      document.getElementById('sroi-input-maintenance').value = 100000;
+      document.getElementById('sroi-input-student').value = 852000;
+    }
+    calculateSROI();
+  });
+
+  calculateSROI();
+
+  // ============================================================
   // Tab 4: 載入範例 CSV 數據與拖曳上傳
   // ============================================================
   const btnLoadSample = document.getElementById('btn-load-sample');

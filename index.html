@@ -534,30 +534,68 @@
             </button>
           </div>
 
-          <!-- ESG & SROI 戰情板 -->
+          <!-- ESG & SROI 戰情計算器板 -->
           <div class="card">
             <div class="card-header">
               <div class="card-title">
-                <i class="fa-solid fa-chart-pie text-purple"></i> ESG 淨零減碳與 SROI 2.85:1 社會效益
+                <i class="fa-solid fa-calculator text-purple"></i> ESG 淨零減碳與 SROI 社會價值動態計算器
+              </div>
+              <select id="sroi-preset-select" style="background:#1e293b; border:1px solid #334155; color:#00f2fe; padding:0.3rem 0.6rem; border-radius:6px; font-size:0.8rem; font-weight:600;">
+                <option value="baseline">基準計畫估算 (SROI 2.85)</option>
+                <option value="conservative">保守防禦估算 (SROI 1.80)</option>
+                <option value="optimistic">高效益擴充 (SROI 3.60)</option>
+                <option value="custom">-- 自訂微調數據 --</option>
+              </select>
+            </div>
+
+            <!-- 可輸入與微調數值區 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.2rem; background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+              <div>
+                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">總資本投入 (Inputs NTD):</label>
+                <input type="number" id="sroi-input-capital" value="420000" step="10000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">避免主管機關裁罰 (NTD):</label>
+                <input type="number" id="sroi-input-fines" value="300000" step="10000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">藥劑與電力節約效益 (NTD):</label>
+                <input type="number" id="sroi-input-savings" value="120000" step="5000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">砂濾泵設備延壽保養 (NTD):</label>
+                <input type="number" id="sroi-input-maintenance" value="80000" step="5000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
+              </div>
+              <div style="grid-column: span 2;">
+                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">學生薪資溢價與衍生產學案 (NTD):</label>
+                <input type="number" id="sroi-input-student" value="700000" step="20000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
               </div>
             </div>
 
+            <!-- 即時動態運算結果 -->
             <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-              <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border-left: 3px solid var(--accent-green);">
-                <div style="font-size: 0.8rem; color: #94a3b8;">次氯酸鈉消毒藥劑精準節約率</div>
-                <div style="font-size: 1.3rem; font-weight: 700; color: var(--accent-green);">20% 節藥減浪費</div>
+              <div style="background: rgba(139, 92, 246, 0.15); padding: 1rem; border-radius: 10px; border: 1px solid var(--accent-purple); text-align: center;">
+                <div style="font-size: 0.8rem; color: #d8b4fe;">即時計算 SROI 社會投資報酬率</div>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #fff; font-family: var(--font-code);" id="sroi-ratio-display">
+                  SROI = 2.85 : 1
+                </div>
+                <div style="font-size: 0.8rem; color: var(--accent-green);" id="sroi-status-text">
+                  🌟 卓越評等：每投入 1 元資本，創造 2.85 元社會成效
+                </div>
               </div>
 
-              <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border-left: 3px solid var(--primary-cyan);">
-                <div style="font-size: 0.8rem; color: #94a3b8;">砂濾泵交替運轉與消除空轉節能</div>
-                <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary-cyan);">15% 節省電力耗損</div>
-              </div>
-
-              <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border-left: 3px solid var(--accent-purple);">
-                <div style="font-size: 0.8rem; color: #94a3b8;">SROI 社會投資報酬率 (投入42萬創120萬價值)</div>
-                <div style="font-size: 1.3rem; font-weight: 700; color: var(--accent-purple);">SROI = 2.85 : 1</div>
+              <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border-left: 3px solid var(--accent-green); display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">總社會產出效益金額 (Outcomes Total)</div>
+                  <div style="font-size: 1.1rem; font-weight: 700; color: var(--accent-green);" id="sroi-total-outcomes">NT$ 1,200,000</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size: 0.75rem; color: #94a3b8;">藥劑節約/電力節能比</div>
+                  <div style="font-size: 0.9rem; font-weight: 600; color: var(--primary-cyan);" id="sroi-esg-rates">節藥 20% | 節電 15%</div>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
 
