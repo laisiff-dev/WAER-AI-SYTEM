@@ -1033,7 +1033,7 @@
               <h2 style="font-size: 1.4rem; color: #fff; margin: 0;">氯氣 / 次氯酸鈉反應與 pH 物種分佈動態實驗室</h2>
             </div>
             <p style="font-size: 0.85rem; color: #94a3b8;">
-              動態切換 Cl₂ 氣體水解 (酸性趨勢) 與 NaOCl 次氯酸鈉 (鹼性趨勢)，實時計算不同 pH 下強效 HOCl 與弱效 OCl⁻ 物種解離平衡與殺菌效能！
+              動態切換 Cl₂ 氣體水解 (酸性趨勢) 與 NaOCl 次氯酸鈉 (鹼性趨勢)，調節加酸 (HCl) 與加鹼 (NaOH) 投加量，實時計算不同 pH 下強效 HOCl 與弱效 OCl⁻ 物種解離平衡與殺菌效能！
             </p>
           </div>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -1046,7 +1046,7 @@
         <!-- 雙欄布局：左側控制與化學反應式，右側 Chart.js 解離物種分佈圖與即時指標卡 -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex-wrap: wrap;">
           
-          <!-- 左側：藥劑源選擇、pH 調節與化學式動態顯示 -->
+          <!-- 左側：藥劑源選擇、加酸加鹼與 pH 調節面板 -->
           <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
             
             <!-- 消毒藥劑來源選擇開關 -->
@@ -1078,35 +1078,77 @@
               </p>
             </div>
 
-            <!-- pH 與總餘氯動態調節滑桿 -->
+            <!-- 加酸量與加鹼量 實時動態調整控制卡片 -->
             <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
-              <div style="margin-bottom: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                  <label style="font-size: 0.85rem; color: #fff; font-weight: 700;">
-                    <i class="fa-solid fa-gauge-high text-cyan"></i> 水體 pH 熱力學調節：
-                  </label>
-                  <span style="font-family: var(--font-code); font-size: 1.1rem; font-weight: 800; color: var(--primary-cyan);" id="speciation-ph-val">7.20 pH</span>
-                </div>
-                <input type="range" id="slider-speciation-ph" min="4.0" max="10.0" step="0.1" value="7.2" style="width: 100%; accent-color: var(--primary-cyan); cursor: pointer;">
+              <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fa-solid fa-flask-vial text-cyan"></i> 滴定加酸 (HCl) / 加鹼 (NaOH) 投加量控制</span>
+                <button class="industrial-btn blue" id="btn-titrate-reset" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;">
+                  <i class="fa-solid fa-rotate-left"></i> 酸鹼重置
+                </button>
               </div>
 
-              <div style="margin-bottom: 1rem;">
+              <!-- 加酸量 Slider & Controls -->
+              <div style="margin-bottom: 0.9rem; background: rgba(245, 158, 11, 0.08); padding: 0.8rem; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.3);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                  <label style="font-size: 0.85rem; color: #fff; font-weight: 700;">
-                    <i class="fa-solid fa-flask text-green"></i> 總游離有效餘氯 (Total Free Chlorine):
+                  <label style="font-size: 0.85rem; color: #f59e0b; font-weight: 700;">
+                    <i class="fa-solid fa-circle-minus"></i> 加酸量 (HCl 鹽酸投加劑量)：
                   </label>
-                  <span style="font-family: var(--font-code); font-size: 1rem; font-weight: 800; color: var(--accent-green);" id="speciation-dose-val">0.60 mg/L</span>
+                  <span style="font-family: var(--font-code); font-size: 1rem; font-weight: 800; color: #f59e0b;" id="spec-val-hcl-dose">0.0 mL/min</span>
                 </div>
-                <input type="range" id="slider-speciation-dose" min="0.1" max="3.0" step="0.05" value="0.60" style="width: 100%; accent-color: var(--accent-green); cursor: pointer;">
+                <input type="range" id="slider-spec-hcl" min="0" max="50" step="0.5" value="0" style="width: 100%; accent-color: #f59e0b; cursor: pointer;">
+                <div style="display: flex; gap: 0.4rem; margin-top: 0.4rem;">
+                  <button class="industrial-btn amber" id="btn-hcl-add1" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;">+1.0 mL/min</button>
+                  <button class="industrial-btn amber" id="btn-hcl-add5" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;">+5.0 mL/min</button>
+                  <button class="industrial-btn amber" id="btn-hcl-zero" style="padding: 0.2rem 0.5rem; font-size: 0.72rem; margin-left: auto;">加酸清零</button>
+                </div>
+              </div>
+
+              <!-- 加鹼量 Slider & Controls -->
+              <div style="margin-bottom: 0.9rem; background: rgba(16, 185, 129, 0.08); padding: 0.8rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                  <label style="font-size: 0.85rem; color: #10b981; font-weight: 700;">
+                    <i class="fa-solid fa-circle-plus"></i> 加鹼量 (NaOH 氫氧化鈉投加劑量)：
+                  </label>
+                  <span style="font-family: var(--font-code); font-size: 1rem; font-weight: 800; color: #10b981;" id="spec-val-naoh-dose">0.0 mL/min</span>
+                </div>
+                <input type="range" id="slider-spec-naoh" min="0" max="50" step="0.5" value="0" style="width: 100%; accent-color: #10b981; cursor: pointer;">
+                <div style="display: flex; gap: 0.4rem; margin-top: 0.4rem;">
+                  <button class="industrial-btn green" id="btn-naoh-add1" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;">+1.0 mL/min</button>
+                  <button class="industrial-btn green" id="btn-naoh-add5" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;">+5.0 mL/min</button>
+                  <button class="industrial-btn green" id="btn-naoh-zero" style="padding: 0.2rem 0.5rem; font-size: 0.72rem; margin-left: auto;">加鹼清零</button>
+                </div>
+              </div>
+
+              <!-- 原水基底 pH 與總餘氯動態調節滑桿 -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                    <label style="font-size: 0.8rem; color: #94a3b8; font-weight: 700;">
+                      <i class="fa-solid fa-gauge-high text-cyan"></i> 原水基底 pH：
+                    </label>
+                    <span style="font-family: var(--font-code); font-size: 0.95rem; font-weight: 800; color: var(--primary-cyan);" id="speciation-ph-val">7.20 pH</span>
+                  </div>
+                  <input type="range" id="slider-speciation-ph" min="4.0" max="10.0" step="0.1" value="7.2" style="width: 100%; accent-color: var(--primary-cyan); cursor: pointer;">
+                </div>
+
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                    <label style="font-size: 0.8rem; color: #94a3b8; font-weight: 700;">
+                      <i class="fa-solid fa-flask text-green"></i> 總有效餘氯:
+                    </label>
+                    <span style="font-family: var(--font-code); font-size: 0.95rem; font-weight: 800; color: var(--accent-green);" id="speciation-dose-val">0.60 mg/L</span>
+                  </div>
+                  <input type="range" id="slider-speciation-dose" min="0.1" max="3.0" step="0.05" value="0.60" style="width: 100%; accent-color: var(--accent-green); cursor: pointer;">
+                </div>
               </div>
 
               <!-- 滴定微調按鈕：加酸 HCl / 加鹼 NaOH -->
-              <div style="display: flex; gap: 0.8rem;">
+              <div style="display: flex; gap: 0.8rem; margin-top: 0.8rem;">
                 <button class="industrial-btn amber" id="btn-titrate-hcl" style="flex: 1; padding: 0.4rem; font-size: 0.78rem;">
-                  <i class="fa-solid fa-flask-vial"></i> 滴定加酸 (HCl 降 pH)
+                  <i class="fa-solid fa-flask-vial"></i> 滴定加酸 (+5 mL/min HCl)
                 </button>
                 <button class="industrial-btn green" id="btn-titrate-naoh" style="flex: 1; padding: 0.4rem; font-size: 0.78rem;">
-                  <i class="fa-solid fa-flask-vial"></i> 滴定加鹼 (NaOH 升 pH)
+                  <i class="fa-solid fa-flask-vial"></i> 滴定加鹼 (+5 mL/min NaOH)
                 </button>
               </div>
             </div>
@@ -1148,7 +1190,7 @@
                 </span>
               </div>
 
-              <div style="position: relative; height: 210px; width: 100%;">
+              <div style="position: relative; height: 220px; width: 100%;">
                 <canvas id="chartPhSpeciation"></canvas>
               </div>
 
@@ -1163,89 +1205,7 @@
 
         </div>
       </div>
-    </div>      </div>
-
-        </div>
-      </div>
-    </div>100%; accent-color: var(--primary-cyan); cursor: pointer;">
-              </div>
-
-              <div style="margin-bottom: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                  <label style="font-size: 0.85rem; color: #fff; font-weight: 700;">
-                    <i class="fa-solid fa-flask text-green"></i> 總游離有效餘氯 (Total Free Chlorine):
-                  </label>
-                  <span style="font-family: var(--font-code); font-size: 1rem; font-weight: 800; color: var(--accent-green);" id="speciation-dose-val">0.60 mg/L</span>
-                </div>
-                <input type="range" id="slider-speciation-dose" min="0.1" max="3.0" step="0.05" value="0.60" style="width: 100%; accent-color: var(--accent-green); cursor: pointer;">
-              </div>
-
-              <!-- 滴定微調按鈕：加酸 HCl / 加鹼 NaOH -->
-              <div style="display: flex; gap: 0.8rem;">
-                <button class="industrial-btn amber" id="btn-titrate-hcl" style="flex: 1; padding: 0.4rem; font-size: 0.78rem;">
-                  <i class="fa-solid fa-flask-vial"></i> 滴定加酸 (HCl 降 pH)
-                </button>
-                <button class="industrial-btn green" id="btn-titrate-naoh" style="flex: 1; padding: 0.4rem; font-size: 0.78rem;">
-                  <i class="fa-solid fa-flask-vial"></i> 滴定加鹼 (NaOH 升 pH)
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- 右側：Chart.js 物種曲線與即時指標卡 -->
-          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
-            
-            <!-- 即時物種濃度與相對殺菌力卡片 -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
-              <div class="metric-card cyan" style="padding: 0.8rem;">
-                <div class="metric-label" style="font-size: 0.75rem;">[HOCl] 次氯酸 (強殺菌)</div>
-                <div class="metric-value" style="font-size: 1.2rem;" id="spec-val-hocl">0.41 <span class="metric-unit">mg/L</span></div>
-                <div class="metric-sub" style="font-size: 0.7rem; color: var(--primary-cyan);" id="spec-pct-hocl">佔比 68.1%</div>
-              </div>
-
-              <div class="metric-card green" style="padding: 0.8rem;">
-                <div class="metric-label" style="font-size: 0.75rem;">[OCl⁻] 次氯酸根 (弱殺菌)</div>
-                <div class="metric-value" style="font-size: 1.2rem;" id="spec-val-ocl">0.19 <span class="metric-unit">mg/L</span></div>
-                <div class="metric-sub" style="font-size: 0.7rem; color: var(--accent-green);" id="spec-pct-ocl">佔比 31.9%</div>
-              </div>
-
-              <div class="metric-card purple" style="padding: 0.8rem;">
-                <div class="metric-label" style="font-size: 0.75rem;">相對殺菌效能指數</div>
-                <div class="metric-value" style="font-size: 1.2rem;" id="spec-val-power">68.5 <span class="metric-unit">%</span></div>
-                <div class="metric-sub" style="font-size: 0.7rem;" id="spec-sub-power">黃金最佳消毒區</div>
-              </div>
-            </div>
-
-            <!-- Chart.js 解離曲線圖卡片 -->
-            <div style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <span style="font-size: 0.85rem; font-weight: 700; color: #fff;">
-                  <i class="fa-solid fa-chart-area text-purple"></i> pH 物種熱力學平衡解離曲線 (Speciation Curve)
-                </span>
-                <span class="status-badge" style="font-size: 0.7rem; background: rgba(139, 92, 246, 0.2); color: #c084fc; border-color: #8b5cf6;" id="speciation-zone-tag">
-                  黃金消毒區 (pH 6.5 ~ 7.5)
-                </span>
-              </div>
-
-              <div style="position: relative; height: 180px; width: 100%;">
-                <canvas id="chartPhSpeciation"></canvas>
-              </div>
-
-              <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.4rem; display: flex; justify-content: space-between; align-items: center;">
-                <span><i class="fa-solid fa-circle" style="color:#00f2fe;"></i> HOCl (次氯酸)</span>
-                <span><i class="fa-solid fa-circle" style="color:#10b981;"></i> OCl⁻ (次氯酸根)</span>
-                <span><i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> 當前 pH 追蹤游標</span>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-
     </div>
-
   </main>
 
   <!-- Application JavaScript -->

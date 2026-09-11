@@ -55,7 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRegressionChart();
       } else if (tab.dataset.tab === 'tab-chlorine-game') {
         renderChlorineGameChart();
+      } else if (tab.dataset.tab === 'tab-speciation-game') {
         renderPhSpeciationChart();
+        if (chartPhSpeciationInstance) {
+          chartPhSpeciationInstance.resize();
+        }
       }
     });
   });
@@ -1138,7 +1142,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   const speciationState = {
     source: 'NaOCl', // 'NaOCl' or 'Cl2'
+    basePh: 7.2,
     ph: 7.2,
+    hclDose: 0.0, // mL/min
+    naohDose: 0.0, // mL/min
     totalChlorine: 0.60, // mg/L
     pKa: 7.53,
     hoclPct: 68.1,
@@ -1149,6 +1156,17 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   let chartPhSpeciationInstance = null;
+
+  function updatePhFromDosing() {
+    const netDose = speciationState.naohDose - speciationState.hclDose;
+    const calcPh = speciationState.basePh + (netDose * 0.08);
+    const finalPh = Math.max(4.0, Math.min(10.0, parseFloat(calcPh.toFixed(2))));
+    
+    const sliderPh = document.getElementById('slider-speciation-ph');
+    if (sliderPh) sliderPh.value = finalPh.toFixed(1);
+
+    calcPhSpeciation(finalPh, speciationState.totalChlorine);
+  }
 
   function calcPhSpeciation(ph, totalCl) {
     const ratio = Math.pow(10, ph - speciationState.pKa);
@@ -1176,6 +1194,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (phValEl) phValEl.textContent = `${speciationState.ph.toFixed(2)} pH`;
     if (doseValEl) doseValEl.textContent = `${speciationState.totalChlorine.toFixed(2)} mg/L`;
+
+    const hclValEl = document.getElementById('spec-val-hcl-dose');
+    const naohValEl = document.getElementById('spec-val-naoh-dose');
+    const sliderHcl = document.getElementById('slider-spec-hcl');
+    const sliderNaoh = document.getElementById('slider-spec-naoh');
+
+    if (hclValEl) hclValEl.textContent = `${speciationState.hclDose.toFixed(1)} mL/min`;
+    if (naohValEl) naohValEl.textContent = `${speciationState.naohDose.toFixed(1)} mL/min`;
+    if (sliderHcl) sliderHcl.value = speciationState.hclDose;
+    if (sliderNaoh) sliderNaoh.value = speciationState.naohDose;
 
     const hoclValEl = document.getElementById('spec-val-hocl');
     const hoclPctEl = document.getElementById('spec-pct-hocl');
@@ -1274,7 +1302,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: hoclData,
             borderColor: '#00f2fe',
             borderWidth: 2,
-            backgroundColor: 'rgba(0, 242, 254, 0.1)',
+            backgroundColor: 'rgba(0, 242, 254, 0.15)',
             fill: true,
             tension: 0.4
           },
@@ -1292,8 +1320,8 @@ document.addEventListener('DOMContentLoaded', () => {
             data: currentDotData,
             borderColor: '#ef4444',
             backgroundColor: '#ef4444',
-            pointRadius: 6,
-            pointHoverRadius: 8,
+            pointRadius: 7,
+            pointHoverRadius: 9,
             showLine: false
           }
         ]
@@ -1326,7 +1354,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const sliderSpecPh = document.getElementById('slider-speciation-ph');
   if (sliderSpecPh) {
     sliderSpecPh.addEventListener('input', (e) => {
-      calcPhSpeciation(parseFloat(e.target.value), speciationState.totalChlorine);
+      speciationState.basePh = parseFloat(e.target.value);
+      updatePhFromDosing();
     });
   }
 
@@ -1336,6 +1365,62 @@ document.addEventListener('DOMContentLoaded', () => {
       calcPhSpeciation(speciationState.ph, parseFloat(e.target.value));
     });
   }
+
+  // Acid (HCl) & Alkali (NaOH) Sliders
+  const sliderHcl = document.getElementById('slider-spec-hcl');
+  if (sliderHcl) {
+    sliderHcl.addEventListener('input', (e) => {
+      speciationState.hclDose = parseFloat(e.target.value);
+      updatePhFromDosing();
+    });
+  }
+
+  const sliderNaoh = document.getElementById('slider-spec-naoh');
+  if (sliderNaoh) {
+    sliderNaoh.addEventListener('input', (e) => {
+      speciationState.naohDose = parseFloat(e.target.value);
+      updatePhFromDosing();
+    });
+  }
+
+  // Acid / Alkali Quick Buttons
+  document.getElementById('btn-hcl-add1')?.addEventListener('click', () => {
+    speciationState.hclDose = Math.min(50, speciationState.hclDose + 1.0);
+    updatePhFromDosing();
+  });
+
+  document.getElementById('btn-hcl-add5')?.addEventListener('click', () => {
+    speciationState.hclDose = Math.min(50, speciationState.hclDose + 5.0);
+    updatePhFromDosing();
+  });
+
+  document.getElementById('btn-hcl-zero')?.addEventListener('click', () => {
+    speciationState.hclDose = 0;
+    updatePhFromDosing();
+  });
+
+  document.getElementById('btn-naoh-add1')?.addEventListener('click', () => {
+    speciationState.naohDose = Math.min(50, speciationState.naohDose + 1.0);
+    updatePhFromDosing();
+  });
+
+  document.getElementById('btn-naoh-add5')?.addEventListener('click', () => {
+    speciationState.naohDose = Math.min(50, speciationState.naohDose + 5.0);
+    updatePhFromDosing();
+  });
+
+  document.getElementById('btn-naoh-zero')?.addEventListener('click', () => {
+    speciationState.naohDose = 0;
+    updatePhFromDosing();
+  });
+
+  document.getElementById('btn-titrate-reset')?.addEventListener('click', () => {
+    speciationState.hclDose = 0;
+    speciationState.naohDose = 0;
+    speciationState.basePh = 7.2;
+    updatePhFromDosing();
+    addEventLog('INFO', '酸鹼投加量重置，恢復基準水體 pH 7.20。');
+  });
 
   // Reagent Source Buttons
   const btnSourceNaocl = document.getElementById('btn-source-naocl');
@@ -1348,9 +1433,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSourceNaocl.style.opacity = '1';
     if (btnSourceCl2) btnSourceCl2.style.opacity = '0.7';
 
-    const newPh = Math.min(10.0, speciationState.ph + 0.3);
-    if (sliderSpecPh) sliderSpecPh.value = newPh.toFixed(1);
-    calcPhSpeciation(newPh, speciationState.totalChlorine);
+    speciationState.naohDose = Math.min(50, speciationState.naohDose + 3.75);
+    updatePhFromDosing();
     addEventLog('INFO', '切換消毒藥劑源為 [次氯酸鈉 NaOCl]：解離產生 OH⁻，促使 pH 微升。');
   });
 
@@ -1361,34 +1445,33 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSourceCl2.style.opacity = '1';
     if (btnSourceNaocl) btnSourceNaocl.style.opacity = '0.7';
 
-    const newPh = Math.max(4.0, speciationState.ph - 0.4);
-    if (sliderSpecPh) sliderSpecPh.value = newPh.toFixed(1);
-    calcPhSpeciation(newPh, speciationState.totalChlorine);
+    speciationState.hclDose = Math.min(50, speciationState.hclDose + 5.0);
+    updatePhFromDosing();
     addEventLog('INFO', '切換消毒藥劑源為 [氯氣 Cl₂]：水解釋放 H⁺，促使 pH 微降。');
   });
 
-  // Titration HCl / NaOH
+  // Titration Quick Action Buttons
   document.getElementById('btn-titrate-hcl')?.addEventListener('click', () => {
-    const newPh = Math.max(4.0, speciationState.ph - 0.3);
-    if (sliderSpecPh) sliderSpecPh.value = newPh.toFixed(1);
-    calcPhSpeciation(newPh, speciationState.totalChlorine);
-    addEventLog('INFO', `滴定加酸 (HCl)：pH 降低至 ${newPh.toFixed(1)}，提升 HOCl 強殺菌體比例。`);
+    speciationState.hclDose = Math.min(50, speciationState.hclDose + 5.0);
+    updatePhFromDosing();
+    addEventLog('INFO', `滴定加酸 (+5 mL/min HCl)：pH 降至 ${speciationState.ph.toFixed(2)}，提升 HOCl 強殺菌體比例。`);
   });
 
   document.getElementById('btn-titrate-naoh')?.addEventListener('click', () => {
-    const newPh = Math.min(10.0, speciationState.ph + 0.3);
-    if (sliderSpecPh) sliderSpecPh.value = newPh.toFixed(1);
-    calcPhSpeciation(newPh, speciationState.totalChlorine);
-    addEventLog('INFO', `滴定加鹼 (NaOH)：pH 上升至 ${newPh.toFixed(1)}，OCl⁻ 比例增加。`);
+    speciationState.naohDose = Math.min(50, speciationState.naohDose + 5.0);
+    updatePhFromDosing();
+    addEventLog('INFO', `滴定加鹼 (+5 mL/min NaOH)：pH 升至 ${speciationState.ph.toFixed(2)}，OCl⁻ 比例增加。`);
   });
 
   // pH Challenge Quest Game
   document.getElementById('btn-ph-challenge')?.addEventListener('click', () => {
-    btnSourceNaocl?.click();
-    if (sliderSpecPh) sliderSpecPh.value = '8.8';
-    calcPhSpeciation(8.8, 0.60);
+    speciationState.source = 'NaOCl';
+    speciationState.hclDose = 0;
+    speciationState.naohDose = 20;
+    speciationState.basePh = 7.2;
+    updatePhFromDosing();
 
-    alert('🏆 啟動【pH 黃金區間化學配比挑戰】：\n\n情境：加藥源使用次氯酸鈉 (NaOCl)，使得水體 pH 飆升至 8.8 (此時強效 HOCl 僅佔 5%)！\n\n任務目標：請使用「滴定加酸 (HCl)」或調節 pH 滑桿，將水體調整至 pH 6.5 ~ 7.2 黃金區間，使 HOCl 佔比達 75% 以上，獲取水務化學特優認證！');
+    alert('🏆 啟動【pH 黃金區間化學配比挑戰】：\n\n情境：加藥源使用次氯酸鈉 (NaOCl)，使得水體加鹼飆升至 pH 8.8 (此時強效 HOCl 僅佔 5%)！\n\n任務目標：請使用「加酸量 (HCl)」滑桿或滴定按鈕，將水體調整至 pH 6.5 ~ 7.2 黃金區間，使 HOCl 佔比達 75% 以上，獲取水務化學特優認證！');
 
     const checkInterval = setInterval(() => {
       if (speciationState.hoclPct >= 75.0 && speciationState.ph >= 6.5 && speciationState.ph <= 7.2) {
