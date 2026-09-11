@@ -37,30 +37,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabs = document.querySelectorAll('.nav-tab');
   const panels = document.querySelectorAll('.tab-panel');
 
+  function switchToTab(tabId) {
+    tabs.forEach(t => {
+      if (t.dataset.tab === tabId) t.classList.add('active');
+      else t.classList.remove('active');
+    });
+
+    panels.forEach(p => {
+      if (p.id === tabId) p.classList.add('active');
+      else p.classList.remove('active');
+    });
+
+    // Re-render charts when entering specific tabs
+    if (tabId === 'tab-reports') {
+      renderLongTermChart();
+    } else if (tabId === 'tab-education') {
+      renderRegressionChart();
+    } else if (tabId === 'tab-chlorine-game') {
+      renderChlorineGameChart();
+    } else if (tabId === 'tab-speciation-game') {
+      renderPhSpeciationChart();
+      if (chartPhSpeciationInstance) {
+        chartPhSpeciationInstance.resize();
+      }
+    }
+  }
+
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      panels.forEach(p => p.classList.remove('active'));
-
-      tab.classList.add('active');
-      const targetPanel = document.getElementById(tab.dataset.tab);
-      if (targetPanel) {
-        targetPanel.classList.add('active');
-      }
-
-      // Re-render charts when entering charts tabs
-      if (tab.dataset.tab === 'tab-reports') {
-        renderLongTermChart();
-      } else if (tab.dataset.tab === 'tab-education') {
-        renderRegressionChart();
-      } else if (tab.dataset.tab === 'tab-chlorine-game') {
-        renderChlorineGameChart();
-      } else if (tab.dataset.tab === 'tab-speciation-game') {
-        renderPhSpeciationChart();
-        if (chartPhSpeciationInstance) {
-          chartPhSpeciationInstance.resize();
-        }
-      }
+      switchToTab(tab.dataset.tab);
     });
   });
 
@@ -1010,9 +1015,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Link button from tab-education "開始 PBL 闖關挑戰"
   document.getElementById('btn-start-pbl-challenge')?.addEventListener('click', () => {
-    const gameTabBtn = document.querySelector('[data-tab="tab-chlorine-game"]');
-    if (gameTabBtn) gameTabBtn.click();
+    switchToTab('tab-chlorine-game');
     startQuest('QUEST_1');
+  });
+
+  // Back button from chlorine game to PBL tab
+  document.getElementById('btn-back-to-pbl-1')?.addEventListener('click', () => {
+    switchToTab('tab-education');
   });
 
   function startQuest(mode) {
@@ -1488,8 +1497,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Link button from tab-education "開啟化學解離與 pH 物種分佈實驗室"
   document.getElementById('btn-goto-speciation-lab')?.addEventListener('click', () => {
-    const specTabBtn = document.querySelector('[data-tab="tab-speciation-game"]');
-    if (specTabBtn) specTabBtn.click();
+    switchToTab('tab-speciation-game');
+  });
+
+  // Back button from speciation lab to PBL tab
+  document.getElementById('btn-back-to-pbl-2')?.addEventListener('click', () => {
+    switchToTab('tab-education');
   });
 
   // Initial calculation
