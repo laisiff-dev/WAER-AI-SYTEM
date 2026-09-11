@@ -55,11 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
       renderRegressionChart();
     } else if (tabId === 'tab-chlorine-game') {
       renderChlorineGameChart();
-    } else if (tabId === 'tab-speciation-game') {
       renderPhSpeciationChart();
-      if (chartPhSpeciationInstance) {
-        chartPhSpeciationInstance.resize();
-      }
+      if (chartChlorineGameInstance) chartChlorineGameInstance.resize();
+      if (chartPhSpeciationInstance) chartPhSpeciationInstance.resize();
     }
   }
 
@@ -1275,28 +1273,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const oclData = [];
     const currentDotData = [];
 
+    const totalCl = speciationState.totalChlorine;
+
     for (let ph = 4.0; ph <= 10.01; ph += 0.2) {
       const phVal = parseFloat(ph.toFixed(1));
       phLabels.push(phVal);
 
       const r = Math.pow(10, phVal - speciationState.pKa);
-      const hFrac = (1 / (1 + r)) * 100;
-      const oFrac = (r / (1 + r)) * 100;
+      const hFrac = 1 / (1 + r);
+      const oFrac = r / (1 + r);
 
-      hoclData.push(parseFloat(hFrac.toFixed(1)));
-      oclData.push(parseFloat(oFrac.toFixed(1)));
+      const hVal = parseFloat((totalCl * hFrac).toFixed(2));
+      const oVal = parseFloat((totalCl * oFrac).toFixed(2));
+
+      hoclData.push(hVal);
+      oclData.push(oVal);
 
       if (Math.abs(phVal - parseFloat(speciationState.ph.toFixed(1))) < 0.15) {
-        currentDotData.push(parseFloat(hFrac.toFixed(1)));
+        currentDotData.push(hVal);
       } else {
         currentDotData.push(null);
       }
     }
 
+    const maxScale = Math.max(1.0, parseFloat((totalCl * 1.15).toFixed(2)));
+
     if (chartPhSpeciationInstance) {
+      chartPhSpeciationInstance.data.labels = phLabels;
       chartPhSpeciationInstance.data.datasets[0].data = hoclData;
       chartPhSpeciationInstance.data.datasets[1].data = oclData;
       chartPhSpeciationInstance.data.datasets[2].data = currentDotData;
+      chartPhSpeciationInstance.options.scales.y.max = maxScale;
       chartPhSpeciationInstance.update('none');
       return;
     }
@@ -1307,7 +1314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         labels: phLabels,
         datasets: [
           {
-            label: 'HOCl 次氯酸 (%)',
+            label: 'HOCl 次氯酸 (mg/L)',
             data: hoclData,
             borderColor: '#00f2fe',
             borderWidth: 2,
@@ -1316,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tension: 0.4
           },
           {
-            label: 'OCl⁻ 次氯酸根 (%)',
+            label: 'OCl⁻ 次氯酸根 (mg/L)',
             data: oclData,
             borderColor: '#10b981',
             borderWidth: 2,
@@ -1338,6 +1345,7 @@ document.addEventListener('DOMContentLoaded', () => {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: { duration: 200 },
         plugins: {
           legend: { display: false }
         },
@@ -1348,9 +1356,9 @@ document.addEventListener('DOMContentLoaded', () => {
             grid: { color: 'rgba(255,255,255,0.05)' }
           },
           y: {
-            title: { display: true, text: '物種佔比 (%)', color: '#94a3b8', font: { size: 10 } },
+            title: { display: true, text: '動態濃度 (mg/L)', color: '#94a3b8', font: { size: 10 } },
             min: 0,
-            max: 100,
+            max: maxScale,
             ticks: { color: '#94a3b8', font: { size: 10 } },
             grid: { color: 'rgba(255,255,255,0.05)' }
           }
