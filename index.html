@@ -3,81 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>輔英科技大學 水質全時監測．淨水程序智慧控制．類職場實作示範基地</title>
-  
-  <!-- Font Awesome & Lucide Icons -->
+  <title>輔英科技大學 3D 智慧水質監測．淨水程序 SCADA 與用電能源管理系統</title>
+
+  <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
+  <!-- Three.js r128 (UMD - 相容本地與線上 GitHub Pages) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
+
   <!-- Application CSS -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- 頂部導航列 Header -->
-  <header class="app-header">
-    <div class="brand-container">
-      <div class="brand-logo">FY</div>
-      <div class="brand-text">
-        <h1>輔英科技大學 水質全時監測．淨水程序智慧控制．類職場實作示範基地</h1>
-        <p>水源地水質自動監控系統建置計畫 (Fooyin University Water Quality Automated IoT SCADA System)</p>
+  <!-- ============================================================
+       全域餘氯不足緊急警報橫幅 (Low Residual Chlorine ALARM Banner)
+       ============================================================ -->
+  <div id="global-alarm-banner" class="global-alarm-banner">
+    <div class="alarm-banner-left">
+      <div class="alarm-siren-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <div style="font-weight: 800; font-size: 0.95rem; color: #fff;" id="global-alarm-title">
+          🚨 餘氯不足緊急警報 (LOW RESIDUAL CHLORINE ALARM)
+        </div>
+        <div style="font-size: 0.8rem; color: #fee2e2;" id="global-alarm-desc">
+          清水池自由餘氯低於法規安全下限，消毒防護不足！
+        </div>
       </div>
     </div>
-    
-      <a href="https://github.com/laisiff-dev/WAER-AI-SYTEM" target="_blank" class="status-badge" style="text-decoration: none; color: #fff; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">
-        <i class="fa-brands fa-github"></i> <span>GitHub 專案</span>
-      </a>
-      <a href="https://laisiff-dev.github.io/WAER-AI-SYTEM/" target="_blank" class="status-badge" style="text-decoration: none; color: var(--primary-cyan); background: rgba(0, 242, 254, 0.15); border-color: var(--primary-cyan);">
-        <i class="fa-solid fa-globe"></i> <span>GitHub Pages 線上版</span>
-      </a>
-      <div class="status-badge">
-        <div class="dot-indicator" id="wifi-status-dot"></div>
-        <span>DO4 Smart Box Wi-Fi: <strong id="wifi-status-text">已連線</strong></span>
+    <div class="alarm-banner-actions">
+      <button class="industrial-btn cyan sm" id="btn-banner-emergency-dose">
+        <i class="fa-solid fa-syringe"></i> 一鍵啟動緊急補氯
+      </button>
+      <button class="industrial-btn amber sm" id="btn-banner-ack">
+        <i class="fa-solid fa-check-double"></i> 確認 / 消音警報
+      </button>
+      <button class="industrial-btn sm" id="btn-banner-mute">
+        <i class="fa-solid fa-volume-high"></i> 警報音：開啟
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       頂部導航列 Header
+       ============================================================ -->
+  <header class="app-header">
+    <div class="brand-container">
+      <div class="brand-logo">3D</div>
+      <div class="brand-text">
+        <h1>輔英科技大學 3D 水質全時監測．淨水程序智慧 SCADA 控制系統</h1>
+        <p>水源地水質自動監控、3D 加氯模擬、各單元用電評估與餘氯不足 ALARM 聯鎖平台</p>
+      </div>
+    </div>
+
+    <div class="header-status-bar">
+      <button class="status-badge header-alarm-pill" id="header-alarm-pill" title="前往餘氯不足 ALARM 設置與紀錄">
+        <i class="fa-solid fa-bell"></i>
+        <span>ALARM: <strong id="header-alarm-text">正常合規</strong></span>
+      </button>
+      <div class="status-badge cyan">
+        <i class="fa-solid fa-bolt"></i>
+        <span>即時耗電: <strong id="header-live-kw">3.98</strong> kW</span>
       </div>
       <div class="status-badge">
-        <i class="fa-solid fa-flask text-cyan"></i>
-        <span>消毒合規率: <strong id="compliance-rate">100%</strong></span>
+        <div class="dot-indicator" id="wifi-status-dot"></div>
+        <span>DO4 Box: <strong id="wifi-status-text">已連線</strong></span>
+      </div>
+      <div class="status-badge green">
+        <i class="fa-solid fa-flask"></i>
+        <span>水質合規率: <strong id="compliance-rate">100%</strong></span>
       </div>
       <div class="status-badge">
         <i class="fa-solid fa-clock text-amber"></i>
         <span id="current-time">2026-09-12 06:00:00</span>
       </div>
+      <a href="https://laisiff-dev.github.io/WAER-AI-SYTEM/" target="_blank" class="status-badge cyan" style="text-decoration: none;">
+        <i class="fa-solid fa-globe"></i> <span>GitHub Pages 線上版</span>
+      </a>
+      <a href="https://github.com/laisiff-dev/WAER-AI-SYTEM" target="_blank" class="status-badge" style="text-decoration: none;">
+        <i class="fa-brands fa-github"></i> <span>GitHub</span>
+      </a>
     </div>
   </header>
 
-  <!-- 主導覽分頁 Tabs -->
+  <!-- ============================================================
+       主導覽分頁 Tabs (所有核心系統整合 3D 化)
+       ============================================================ -->
   <nav class="app-nav">
     <button class="nav-tab active" data-tab="tab-scada">
-      <i class="fa-solid fa-chart-line"></i> SCADA 主戰情室 (圖 4.1 平面圖)
-    </button>
-    <button class="nav-tab" data-tab="tab-field-ctrl">
-      <i class="fa-solid fa-microchip"></i> 現場可動化控制面板 (DO4 Smart Box)
-    </button>
-    <button class="nav-tab" data-tab="tab-education">
-      <i class="fa-solid fa-graduation-cap"></i> 雙師教學與 PBL 亮點展示
+      <i class="fa-solid fa-cubes"></i>
+      <span>3D SCADA 主戰情室 &amp; 自動/手動控制</span>
+      <span class="nav-tag-3d">3D</span>
     </button>
     <button class="nav-tab" data-tab="tab-chlorine-game">
-      <i class="fa-solid fa-flask-vial"></i> 加氯 / 減氯水質控制與 pH 物種解離動態模擬器
+      <i class="fa-solid fa-flask-vial"></i>
+      <span>3D 加氯/減氯與 pH 物種解離模擬器</span>
+      <span class="nav-tag-3d">3D</span>
     </button>
-    <button class="nav-tab" data-tab="tab-import">
-      <i class="fa-solid fa-file-import"></i> 資料匯入與動態模擬器
+    <button class="nav-tab" data-tab="tab-energy">
+      <i class="fa-solid fa-bolt"></i>
+      <span>各單元用電量 3D 評估與節能分析</span>
+      <span class="nav-tag-3d">3D</span>
     </button>
-    <button class="nav-tab" data-tab="tab-reports">
-      <i class="fa-solid fa-file-pdf"></i> 長期數據整理與法定報表
+    <button class="nav-tab" data-tab="tab-data-qc">
+      <i class="fa-solid fa-database"></i>
+      <span>資料匯入監控、水質控管與報表輸出</span>
+    </button>
+    <button class="nav-tab" data-tab="tab-education">
+      <i class="fa-solid fa-graduation-cap"></i>
+      <span>雙師教學、3D 通訊架構與 PBL/SROI</span>
+      <span class="nav-tag-3d">3D</span>
     </button>
   </nav>
 
-  <!-- 主內容區域 -->
+  <!-- ============================================================
+       主內容區域
+       ============================================================ -->
   <main class="main-content">
 
     <!-- ============================================================
-         Tab 1: SCADA 主戰情室 (圖 4.1 客製平面圖)
+         Tab 1: 3D SCADA 主戰情室 + 自動/手動一體化控制 + 餘氯不足 ALARM
          ============================================================ -->
     <div id="tab-scada" class="tab-panel active">
-      
-      <!-- 頂部指標卡數值位覽 -->
+
+      <!-- 頂部 6 格即時核心 KPI 指標卡 -->
       <div class="metrics-row">
         <div class="metric-card cyan">
           <div class="metric-label">沉澱池 pH (原水)</div>
@@ -86,295 +140,203 @@
         </div>
 
         <div class="metric-card cyan">
-          <div class="metric-label">沉澱池 ORP (原水總氧化力)</div>
+          <div class="metric-label">沉澱池 ORP (原水氧化力)</div>
           <div class="metric-value" id="val-sed-orp">485 <span class="metric-unit">mV</span></div>
           <div class="metric-sub">感測器: ORP485-A-C-N</div>
         </div>
 
         <div class="metric-card green" id="card-clean-ph">
-          <div class="metric-label">清水池 pH (出水法規 6.0~8.5)</div>
+          <div class="metric-label">清水池 pH (法規 6.0~8.5)</div>
           <div class="metric-value" id="val-clean-ph">7.35 <span class="metric-unit">pH</span></div>
-          <div class="metric-sub">符合飲用水標準</div>
+          <div class="metric-sub" id="sub-clean-ph">符合飲用水水質標準</div>
         </div>
 
         <div class="metric-card green" id="card-clean-orp">
-          <div class="metric-label">清水池 ORP / 推算自由餘氯</div>
+          <div class="metric-label">清水池 ORP / 自由餘氯</div>
           <div class="metric-value" id="val-clean-orp">710 <span class="metric-unit">mV</span></div>
           <div class="metric-sub">推算自由餘氯: <strong id="val-clean-chlorine">0.58</strong> mg/L</div>
         </div>
 
         <div class="metric-card amber">
-          <div class="metric-label">砂濾泵 A/B 運轉與交替時數</div>
-          <div class="metric-value" id="val-pump-status">Pump A 運轉中</div>
-          <div class="metric-sub">Pump A: <span id="hrs-pump-a">142</span>h | Pump B: <span id="hrs-pump-b">139</span>h</div>
+          <div class="metric-label">砂濾泵 A/B 交替與運轉時數</div>
+          <div class="metric-value" style="font-size: 1.2rem;" id="val-pump-status">Pump A 運轉中</div>
+          <div class="metric-sub">Pump A: <span id="hrs-pump-a">142.5</span>h | Pump B: <span id="hrs-pump-b">139.2</span>h</div>
+        </div>
+
+        <div class="metric-card purple" id="card-live-power">
+          <div class="metric-label">全場即時總用電量評估</div>
+          <div class="metric-value" id="val-scada-kw">3.98 <span class="metric-unit">kW</span></div>
+          <div class="metric-sub">預估日耗電: <strong id="val-scada-daily-kwh">58.4</strong> kWh</div>
         </div>
       </div>
 
-      <div class="dashboard-grid">
-        
-        <!-- 中央圖 4.1 客製平面圖 SCADA HMI -->
-        <div class="card">
+      <!-- 同介面雙欄：左側 3D SCADA 數位孿生 + 餘氯 ALARM 系統；右側 自動/手動整合控制面板 + 事件日誌 -->
+      <div class="scada-unified-grid">
 
-          <div class="scada-hmi-container">
-            <!-- SVG SCADA Graphic Architecture (Matches Fig 4.1 Exactly) -->
-            <svg class="scada-diagram" viewBox="0 0 1000 480" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <!-- Water gradient -->
-                <linearGradient id="waterGradSed" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#0284c7" stop-opacity="0.6"/>
-                  <stop offset="100%" stop-color="#0369a1" stop-opacity="0.8"/>
-                </linearGradient>
-                <linearGradient id="waterGradClean" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.6"/>
-                  <stop offset="100%" stop-color="#0891b2" stop-opacity="0.9"/>
-                </linearGradient>
-              </defs>
+        <!-- 左欄：3D SCADA 數位孿生 + 餘氯不足 ALARM 告警系統 -->
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
 
-              <!-- Background Grid -->
-              <rect x="0" y="0" width="1000" height="480" fill="#0b1120" rx="10"/>
+          <!-- 3D SCADA 全廠數位孿生畫布 -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-cube text-cyan"></i> 3D 淨水場 SCADA 數位孿生戰情視圖 (圖 4.1 實景 3D 化)
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span class="status-badge cyan" id="scada-water-level-badge">清水池水位：NORMAL</span>
+              </div>
+            </div>
 
-              <!-- ================= 沉澱池 (Sedimentation Tank) ================= -->
-              <g transform="translate(740, 220)">
-                <rect x="0" y="0" width="220" height="180" fill="url(#waterGradSed)" stroke="#38bdf8" stroke-width="2" rx="6"/>
-                <rect x="0" y="0" width="220" height="30" fill="rgba(15,23,42,0.6)"/>
-                <text x="110" y="20" font-family="Outfit" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">沉澱池</text>
-                
-                <!-- pH Probe Sedimentation -->
-                <rect x="40" y="40" width="14" height="90" fill="#334155" rx="3"/>
-                <rect x="36" y="130" width="22" height="25" fill="#10b981" rx="2"/>
-                <text x="47" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">pH485-A-C-N</text>
-
-                <!-- ORP Probe Sedimentation -->
-                <rect x="140" y="40" width="14" height="90" fill="#334155" rx="3"/>
-                <rect x="136" y="130" width="22" height="25" fill="#f59e0b" rx="2"/>
-                <text x="147" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">ORP485-A-C-N</text>
-
-                <!-- Cleaning Bubbles animation -->
-                <circle id="sed-bubble-1" class="air-bubble-pulse" cx="47" cy="140" r="4" fill="#38bdf8"/>
-                <circle id="sed-bubble-2" class="air-bubble-pulse" cx="147" cy="140" r="4" fill="#38bdf8"/>
-              </g>
-
-              <!-- 沉澱池 485集線器 -->
-              <g transform="translate(760, 60)">
-                <rect x="0" y="0" width="180" height="90" fill="#1e293b" stroke="#00f2fe" stroke-width="2" rx="6"/>
-                <text x="90" y="25" font-family="Outfit" font-size="12" font-weight="700" fill="#00f2fe" text-anchor="middle">485 集線器 (12V供電 6頻道)</text>
-                <text x="90" y="45" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">HUB485-300-12V-6CH-N</text>
-                <circle cx="20" cy="68" r="6" fill="#10b981" id="hub-sed-led"/>
-                <text x="32" y="72" font-family="Outfit" font-size="10" fill="#e2e8f0">RS-485 Active</text>
-              </g>
-
-              <!-- ================= 清水池 (Clean Water Reservoir) ================= -->
-              <g transform="translate(40, 220)">
-                <rect x="0" y="0" width="220" height="180" fill="url(#waterGradClean)" stroke="#06b6d4" stroke-width="2" rx="6"/>
-                <rect x="0" y="0" width="220" height="30" fill="rgba(15,23,42,0.6)"/>
-                <text x="110" y="20" font-family="Outfit" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">清水池</text>
-                
-                <!-- pH Probe Clean Water -->
-                <rect x="40" y="40" width="14" height="90" fill="#334155" rx="3"/>
-                <rect x="36" y="130" width="22" height="25" fill="#10b981" rx="2"/>
-                <text x="47" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">pH485-A-C-N</text>
-
-                <!-- ORP Probe Clean Water -->
-                <rect x="110" y="40" width="14" height="90" fill="#334155" rx="3"/>
-                <rect x="106" y="130" width="22" height="25" fill="#f59e0b" rx="2"/>
-                <text x="117" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">ORP485-A-C-N</text>
-
-                <!-- Float Water Level Switch -->
-                <rect x="170" y="80" width="26" height="36" fill="#64748b" rx="4" stroke="#94a3b8"/>
-                <text x="183" y="102" font-family="Outfit" font-size="10" fill="#fff" font-weight="bold" text-anchor="middle">浮球</text>
-                <text x="183" y="170" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">水位開關(DI1)</text>
-
-                <!-- Cleaning Bubbles animation -->
-                <circle id="clean-bubble-1" class="air-bubble-pulse" cx="47" cy="140" r="4" fill="#38bdf8"/>
-                <circle id="clean-bubble-2" class="air-bubble-pulse" cx="117" cy="140" r="4" fill="#38bdf8"/>
-              </g>
-
-              <!-- 清水池 485集線器 -->
-              <g transform="translate(60, 60)">
-                <rect x="0" y="0" width="180" height="90" fill="#1e293b" stroke="#00f2fe" stroke-width="2" rx="6"/>
-                <text x="90" y="25" font-family="Outfit" font-size="12" font-weight="700" fill="#00f2fe" text-anchor="middle">485 集線器 (12V供電 6頻道)</text>
-                <text x="90" y="45" font-family="Outfit" font-size="10" fill="#94a3b8" text-anchor="middle">HUB485-300-12V-6CH-N</text>
-                <circle cx="20" cy="68" r="6" fill="#10b981" id="hub-clean-led"/>
-                <text x="32" y="72" font-family="Outfit" font-size="10" fill="#e2e8f0">RS-485 Active</text>
-              </g>
-
-              <!-- ================= 中央 IoT 智能邏輯控制系統 DO4-ABS-N (Smart Box) ================= -->
-              <g transform="translate(370, 80)">
-                <rect x="0" y="0" width="260" height="280" fill="#0f172a" stroke="#38bdf8" stroke-width="3" rx="12"/>
-                <rect x="10" y="10" width="240" height="40" fill="#1e293b" rx="6"/>
-                <text x="130" y="35" font-family="Outfit" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">IoT 智能邏輯控制系統</text>
-                <text x="130" y="70" font-family="Outfit" font-size="13" font-weight="600" fill="#00f2fe" text-anchor="middle">DO4-ABS-N (Smart Box)</text>
-                
-                <!-- Smart Box Controller Status LEDs -->
-                <g transform="translate(25, 90)">
-                  <circle cx="15" cy="15" r="7" fill="#10b981" id="led-pwr"/>
-                  <text x="30" y="19" font-family="Outfit" font-size="11" fill="#e2e8f0">PWR</text>
-
-                  <circle cx="95" cy="15" r="7" fill="#10b981" id="led-run"/>
-                  <text x="110" y="19" font-family="Outfit" font-size="11" fill="#e2e8f0">SYS RUN</text>
-
-                  <circle cx="175" cy="15" r="7" fill="#38bdf8" id="led-wifi"/>
-                  <text x="190" y="19" font-family="Outfit" font-size="11" fill="#e2e8f0">Wi-Fi</text>
-                </g>
-
-                <!-- Relay Outputs Display -->
-                <rect x="20" y="130" width="220" height="120" fill="#1e293b" rx="6" stroke="#334155"/>
-                <text x="130" y="150" font-family="Outfit" font-size="11" font-weight="600" fill="#94a3b8" text-anchor="middle">RELAY DO 驅動輸出與 DI 連動</text>
-
-                <!-- Relay 1 (Sand Filter Pump A) -->
-                <circle cx="45" cy="180" r="8" fill="#10b981" id="svg-relay-1"/>
-                <text x="45" y="202" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">Relay 1</text>
-                <text x="45" y="215" font-family="Outfit" font-size="9" fill="#94a3b8" text-anchor="middle">砂濾泵 A</text>
-
-                <!-- Relay 2 (Sand Filter Pump B) -->
-                <circle cx="100" cy="180" r="8" fill="#64748b" id="svg-relay-2"/>
-                <text x="100" y="202" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">Relay 2</text>
-                <text x="100" y="215" font-family="Outfit" font-size="9" fill="#94a3b8" text-anchor="middle">砂濾泵 B</text>
-
-                <!-- Relay 3 (Dosing Pump) -->
-                <circle cx="155" cy="180" r="8" fill="#10b981" id="svg-relay-3"/>
-                <text x="155" y="202" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">Relay 3</text>
-                <text x="155" y="215" font-family="Outfit" font-size="9" fill="#94a3b8" text-anchor="middle">加藥泵</text>
-
-                <!-- Relay 4 (Alarm/Air Clean) -->
-                <circle cx="210" cy="180" r="8" fill="#38bdf8" id="svg-relay-4"/>
-                <text x="210" y="202" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">Relay 4</text>
-                <text x="210" y="215" font-family="Outfit" font-size="9" fill="#94a3b8" text-anchor="middle">空氣清洗</text>
-              </g>
-
-              <!-- Lines & Bus Connections -->
-              <!-- RS-485 Line Clean Water -> Controller -->
-              <path d="M 240,105 L 370,140" stroke="#00f2fe" stroke-width="3" fill="none" class="water-flow-line"/>
-              <text x="300" y="115" font-family="Outfit" font-size="11" fill="#00f2fe" font-weight="bold">RS-485</text>
-
-              <!-- RS-485 Line Sedimentation -> Controller -->
-              <path d="M 760,105 L 630,140" stroke="#00f2fe" stroke-width="3" fill="none" class="water-flow-line"/>
-              <text x="690" y="115" font-family="Outfit" font-size="11" fill="#00f2fe" font-weight="bold">RS-485</text>
-
-              <!-- Control lines from Smart Box DO4 Relays to Pumps -->
-              <path d="M 415,340 L 405,390" stroke="#10b981" stroke-width="2" stroke-dasharray="3,3"/>
-              <path d="M 470,340 L 500,390" stroke="#64748b" stroke-width="2" stroke-dasharray="3,3"/>
-              <path d="M 525,340 L 595,390" stroke="#f59e0b" stroke-width="2" stroke-dasharray="3,3"/>
-
-              <g transform="translate(370, 390)">
-                <!-- Sand Filter Pump A Icon & Animation -->
-                <rect x="0" y="0" width="70" height="45" fill="#1e293b" stroke="#10b981" stroke-width="2" rx="6"/>
-                <circle cx="35" cy="22.5" r="13" fill="#334155" stroke="#10b981"/>
-                <g class="pump-rotation" id="anim-pump-a" transform="translate(35, 22.5)">
-                  <line x1="-9" y1="0" x2="9" y2="0" stroke="#00f2fe" stroke-width="3"/>
-                  <line x1="0" y1="-9" x2="0" y2="9" stroke="#00f2fe" stroke-width="3"/>
-                </g>
-                <text x="35" y="58" font-family="Outfit" font-size="10" fill="#ffffff" text-anchor="middle">砂濾泵 A (既有)</text>
-
-                <!-- Sand Filter Pump B Icon & Animation -->
-                <rect x="95" y="0" width="70" height="45" fill="#1e293b" stroke="#64748b" stroke-width="2" rx="6"/>
-                <circle cx="130" cy="22.5" r="13" fill="#334155" stroke="#64748b"/>
-                <g class="pump-rotation pump-stopped" id="anim-pump-b" transform="translate(130, 22.5)">
-                  <line x1="-9" y1="0" x2="9" y2="0" stroke="#64748b" stroke-width="3"/>
-                  <line x1="0" y1="-9" x2="0" y2="9" stroke="#64748b" stroke-width="3"/>
-                </g>
-                <text x="130" y="58" font-family="Outfit" font-size="10" fill="#ffffff" text-anchor="middle">砂濾泵 B (既有)</text>
-
-                <!-- Dosing Pump Icon & Animation -->
-                <rect x="190" y="0" width="70" height="45" fill="#1e293b" stroke="#f59e0b" stroke-width="2" rx="6"/>
-                <circle cx="225" cy="22.5" r="13" fill="#334155" stroke="#f59e0b"/>
-                <g class="pump-rotation" id="anim-pump-dose" transform="translate(225, 22.5)">
-                  <polygon points="0,-9 7,7 -7,7" fill="#f59e0b"/>
-                </g>
-                <text x="225" y="58" font-family="Outfit" font-size="10" fill="#ffffff" text-anchor="middle">加藥泵 (連動)</text>
-              </g>
-
-            </svg>
+            <div class="viewport-3d-wrap tall" id="scada-3d-viewport">
+              <div class="hud-3d-toolbar">
+                <div class="hud-3d-group">
+                  <button class="cam-btn scada-cam-btn active" data-cam="overview"><i class="fa-solid fa-globe"></i> 全廠俯視</button>
+                  <button class="cam-btn scada-cam-btn" data-cam="sed"><i class="fa-solid fa-water"></i> 沉澱池</button>
+                  <button class="cam-btn scada-cam-btn" data-cam="clean"><i class="fa-solid fa-droplet"></i> 清水池 / 浮球</button>
+                  <button class="cam-btn scada-cam-btn" data-cam="pumps"><i class="fa-solid fa-gears"></i> 砂濾泵 &amp; 加藥</button>
+                  <button class="cam-btn scada-cam-btn" data-cam="smartbox"><i class="fa-solid fa-microchip"></i> DO4 Smart Box</button>
+                </div>
+              </div>
+              <div class="hud-3d-labels-layer" id="scada-3d-labels"></div>
+              <div class="hud-3d-hint">
+                <i class="fa-solid fa-computer-mouse"></i> 左鍵拖曳旋轉 3D 視角 | 滾輪縮放 | 右鍵平移
+              </div>
+              <div class="replay-live-pill" id="replay-live-pill">
+                <i class="fa-solid fa-circle-play"></i> 歷史資料回放監控中：<span id="replay-live-time">--</span>
+              </div>
+            </div>
           </div>
+
+          <!-- 餘氯不足 ALARM 告警系統設置與聯鎖管理 -->
+          <div class="card" id="scada-alarm-section" style="border-color: rgba(239, 68, 68, 0.35);">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="alarm-status-lamp" id="alarm-lamp"></span>
+                <i class="fa-solid fa-bell text-red"></i>
+                <span>餘氯不足 ALARM 告警系統設置與聯鎖控管</span>
+              </div>
+              <span class="badge-status green" id="alarm-state-text">目前狀態：餘氯正常</span>
+            </div>
+
+            <!-- 警報門檻參數設定 -->
+            <div class="alarm-config-grid">
+              <div class="alarm-threshold-box">
+                <label for="cfg-alarm-warn-low">⚠️ 餘氯不足警戒值 (mg/L)</label>
+                <input type="number" id="cfg-alarm-warn-low" class="form-input" value="0.30" step="0.05" min="0.10" max="0.80" style="width: 100%;">
+              </div>
+              <div class="alarm-threshold-box" style="border-color: rgba(239, 68, 68, 0.55);">
+                <label for="cfg-alarm-crit-low">🚨 餘氯嚴重不足下限 (mg/L)</label>
+                <input type="number" id="cfg-alarm-crit-low" class="form-input" value="0.20" step="0.05" min="0.05" max="0.60" style="width: 100%;">
+              </div>
+              <div class="alarm-threshold-box" style="border-color: rgba(168, 85, 247, 0.45);">
+                <label for="cfg-alarm-high">☣️ 餘氯過高上限 (mg/L)</label>
+                <input type="number" id="cfg-alarm-high" class="form-input" value="1.00" step="0.05" min="0.60" max="2.00" style="width: 100%;">
+              </div>
+              <div class="alarm-threshold-box" style="border-color: rgba(245, 158, 11, 0.45);">
+                <label for="cfg-alarm-orp-low">⚡ ORP 消毒連動下限 (mV)</label>
+                <input type="number" id="cfg-alarm-orp-low" class="form-input" value="650" step="10" min="500" max="750" style="width: 100%;">
+              </div>
+            </div>
+
+            <!-- 警報聯鎖開關與測試按鈕 -->
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.28); padding: 0.75rem 0.9rem; border-radius: 10px; margin-bottom: 0.9rem;">
+              <div style="display: flex; gap: 1.2rem; flex-wrap: wrap; align-items: center;">
+                <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer;">
+                  <span class="switch">
+                    <input type="checkbox" id="cfg-alarm-sound" checked>
+                    <span class="slider"></span>
+                  </span>
+                  <span>蜂鳴警報音 (Web Audio)</span>
+                </label>
+
+                <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer;">
+                  <span class="switch">
+                    <input type="checkbox" id="cfg-alarm-interlock" checked>
+                    <span class="slider"></span>
+                  </span>
+                  <span>餘氯不足自動聯鎖補氯 (AUTO)</span>
+                </label>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="industrial-btn red sm" id="btn-test-low-cl-alarm">
+                  <i class="fa-solid fa-radiation"></i> 模擬餘氯不足警報
+                </button>
+                <button class="industrial-btn amber sm" id="btn-ack-alarm">
+                  <i class="fa-solid fa-bell-slash"></i> 確認 / 消音
+                </button>
+                <button class="industrial-btn green sm" id="btn-reset-normal-water">
+                  <i class="fa-solid fa-rotate-left"></i> 恢復正常水質
+                </button>
+                <button class="industrial-btn sm" id="btn-export-alarm-csv">
+                  <i class="fa-solid fa-download"></i> 匯出警報紀錄
+                </button>
+              </div>
+            </div>
+
+            <!-- 警報紀錄稽核表 -->
+            <div style="max-height: 185px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>發生時間</th>
+                    <th>等級</th>
+                    <th>警報類型</th>
+                    <th>觸發數值 (Cl₂ / ORP)</th>
+                    <th>聯鎖處置</th>
+                    <th>狀態</th>
+                  </tr>
+                </thead>
+                <tbody id="table-alarm-history-body">
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: #64748b;">尚無警報觸發紀錄，系統消毒防護正常。</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
 
-        <!-- 右側即時警報與日誌 Event Log -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">
-              <i class="fa-solid fa-bell text-amber"></i> 水質警報與自動控制日誌
-            </div>
-            <span class="status-badge" style="background: rgba(16,185,129,0.1); border-color: var(--accent-green);" id="badge-log-count">
-              運轉正常
-            </span>
-          </div>
+        <!-- 右欄：同界面 自動 / 手動整合現場控制面板 (DO4 Smart Box) + 即時事件日誌 -->
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
 
-          <div style="height: 480px; overflow-y: auto;" id="event-log-container">
-            <div class="modbus-line">
-              <span class="modbus-time">[06:00:00]</span>
-              <span class="modbus-hex">SYS_OK</span>
-              <span class="modbus-desc">系統完成連線，沉澱池/清水池 RS-485 正常通訊中</span>
-            </div>
-            <div class="modbus-line">
-              <span class="modbus-time">[05:30:12]</span>
-              <span class="modbus-hex">PUMP_SW</span>
-              <span class="modbus-desc">清水池水位到達設定下限，DO4 控制器自動切換啟動砂濾泵 A 與加藥泵</span>
-            </div>
-            <div class="modbus-line">
-              <span class="modbus-time">[04:00:00]</span>
-              <span class="modbus-hex">AIR_CLEAN</span>
-              <span class="modbus-desc">觸發 12VDC 空氣泵 30s 脈衝，執行感測器電極自動噴氣清洗</span>
-            </div>
-          </div>
-        </div>
+          <!-- 整合式 Smart Box DO4-ABS-N 自動/手動控制箱 -->
+          <div class="field-controller-chassis">
+            <div class="chassis-screw screw-tl"></div>
+            <div class="chassis-screw screw-tr"></div>
+            <div class="chassis-screw screw-bl"></div>
+            <div class="chassis-screw screw-br"></div>
 
-      </div>
-    </div>
-
-    <!-- ============================================================
-         Tab 2: 現場可動化控制面板 (DO4 Smart Box Field Controller)
-         ============================================================ -->
-    <div id="tab-field-ctrl" class="tab-panel">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <i class="fa-solid fa-sliders text-cyan"></i> Smart Box DO4-ABS-N 現場可動化控制面板 (交互式硬體控制器)
-          </div>
-          <div>
-            <span class="status-badge" style="background: rgba(0,242,254,0.1); border-color: var(--primary-cyan);">
-              IP67 ABS 防水箱體 (現場實體視覺)
-            </span>
-          </div>
-        </div>
-
-        <div class="field-controller-chassis">
-          <!-- Screws -->
-          <div class="chassis-screw screw-tl"></div>
-          <div class="chassis-screw screw-tr"></div>
-          <div class="chassis-screw screw-bl"></div>
-          <div class="chassis-screw screw-br"></div>
-
-          <div class="controller-header-bar">
-            <div>
-              <span class="controller-model">MODEL: DO4-ABS-N (Smart Box)</span>
-              <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.2rem;">
-                IoT 智能邏輯控制系統 | 4 組 Relay DO 輸出 | 2 點 DI 數位輸入 | RS-485 雙集線器彙集
-              </p>
+            <div class="controller-header-bar">
+              <div>
+                <div class="controller-model"><i class="fa-solid fa-microchip"></i> DO4-ABS-N 現場整合控制箱</div>
+                <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.15rem;">
+                  SCADA 與自動 / 手動同屏連動操作
+                </div>
+              </div>
+              <div class="mode-pill-toggle">
+                <button class="mode-pill-btn active-auto" id="btn-mode-auto"><i class="fa-solid fa-robot"></i> AUTO 自動</button>
+                <button class="mode-pill-btn" id="btn-mode-manual"><i class="fa-solid fa-hand"></i> MANUAL 手動</button>
+              </div>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <span class="switch-label">運轉模式:</span>
-              <label class="switch">
-                <input type="checkbox" id="switch-auto-manual" checked>
-                <span class="slider"></span>
-              </label>
-              <span id="text-ctrl-mode" style="font-weight: 700; color: var(--accent-green);">AUTO (自動交替)</span>
-            </div>
-          </div>
 
-          <div class="control-panel-grid">
-            
-            <!-- Panel Block 1: Relay DO Outputs -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; font-size: 0.78rem; padding: 0.45rem 0.7rem; border-radius: 7px; background: rgba(0, 242, 254, 0.07); border: 1px solid rgba(0, 242, 254, 0.2);">
+              <span>當前控制權限：</span>
+              <strong id="text-ctrl-mode" style="color: var(--accent-green);">AUTO (自動雙泵交替 &amp; 聯鎖補氯)</strong>
+            </div>
+
+            <!-- 4 組 Relay DO 輸出 + 即時功率標示 -->
             <div class="panel-block">
               <div class="panel-block-title">
-                <span>Relay 繼電器輸出 (4組)</span>
+                <span>RELAY DO 輸出控制 (點按可即時覆寫)</span>
                 <i class="fa-solid fa-bolt text-amber"></i>
               </div>
 
-              <!-- Relay 1 Sand Filter Pump A -->
               <div class="toggle-switch-group">
                 <div>
-                  <div class="switch-label">Relay 1: 砂濾泵 A (現場既有)</div>
-                  <div style="font-size: 0.75rem; color: #94a3b8;">交替運轉馬達 A</div>
+                  <div class="switch-label">Relay 1: 砂濾泵 A <span class="text-cyan" style="font-family: var(--font-code); font-size: 0.75rem;" id="relay1-kw">2.20 kW</span></div>
+                  <div class="switch-sub">3HP 交替運轉馬達 A</div>
                 </div>
                 <label class="switch">
                   <input type="checkbox" id="ctrl-relay-1" checked>
@@ -382,11 +344,10 @@
                 </label>
               </div>
 
-              <!-- Relay 2 Sand Filter Pump B -->
               <div class="toggle-switch-group">
                 <div>
-                  <div class="switch-label">Relay 2: 砂濾泵 B (現場既有)</div>
-                  <div style="font-size: 0.75rem; color: #94a3b8;">交替運轉馬達 B</div>
+                  <div class="switch-label">Relay 2: 砂濾泵 B <span class="text-cyan" style="font-family: var(--font-code); font-size: 0.75rem;" id="relay2-kw">0.02 kW</span></div>
+                  <div class="switch-sub">3HP 交替運轉馬達 B</div>
                 </div>
                 <label class="switch">
                   <input type="checkbox" id="ctrl-relay-2">
@@ -394,11 +355,10 @@
                 </label>
               </div>
 
-              <!-- Relay 3 Dosing Pump -->
               <div class="toggle-switch-group">
                 <div>
-                  <div class="switch-label">Relay 3: 次氯酸鈉加藥泵</div>
-                  <div style="font-size: 0.75rem; color: #94a3b8;">水流建立自動連動</div>
+                  <div class="switch-label">Relay 3: 次氯酸鈉加藥泵 <span class="text-amber" style="font-family: var(--font-code); font-size: 0.75rem;" id="relay3-kw">0.18 kW</span></div>
+                  <div class="switch-sub">水流建立自動連動 / 餘氯不足緊急補氯</div>
                 </div>
                 <label class="switch">
                   <input type="checkbox" id="ctrl-relay-3" checked>
@@ -406,11 +366,10 @@
                 </label>
               </div>
 
-              <!-- Relay 4 Air Clean Pulse -->
               <div class="toggle-switch-group">
                 <div>
-                  <div class="switch-label">Relay 4: 電極噴氣自動清洗</div>
-                  <div style="font-size: 0.75rem; color: #94a3b8;">12VDC 空氣泵脈衝</div>
+                  <div class="switch-label">Relay 4: 電極空氣清洗泵 <span class="text-green" style="font-family: var(--font-code); font-size: 0.75rem;" id="relay4-kw">0.00 kW</span></div>
+                  <div class="switch-sub">12VDC 定時噴氣防止電極結垢</div>
                 </div>
                 <label class="switch">
                   <input type="checkbox" id="ctrl-relay-4">
@@ -419,301 +378,597 @@
               </div>
             </div>
 
-            <!-- Panel Block 2: DI Inputs & Water Level Trigger -->
+            <!-- DI 數位輸入模擬與快速操作 -->
             <div class="panel-block">
               <div class="panel-block-title">
-                <span>DI 數位輸入 (清水池浮球開關)</span>
+                <span>DI1 浮球水位觸發與現場動作</span>
                 <i class="fa-solid fa-water text-cyan"></i>
               </div>
-
-              <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem;">
-                點擊按紐模擬浮球水位變化，觀察 Smart Box DO4 如何執行「雙泵交替」與「加藥連動」：
-              </p>
-
-              <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-                <button class="industrial-btn cyan" id="btn-sim-low-level">
-                  <i class="fa-solid fa-arrow-down"></i> 模擬 DI1 觸發：水位過低 (補水啟泵)
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem;">
+                <button class="industrial-btn cyan sm" id="btn-sim-low-level">
+                  <i class="fa-solid fa-arrow-down"></i> 低水位啟泵交替
                 </button>
-                <button class="industrial-btn amber" id="btn-sim-high-level">
-                  <i class="fa-solid fa-arrow-up"></i> 模擬 DI1 觸發：水位過高 (水滿停泵)
+                <button class="industrial-btn amber sm" id="btn-sim-high-level">
+                  <i class="fa-solid fa-arrow-up"></i> 高水位滿水停泵
                 </button>
-                <button class="industrial-btn" id="btn-trigger-air-clean">
-                  <i class="fa-solid fa-wind"></i> 手動觸發 12VDC 電極空氣清洗 (30秒)
+                <button class="industrial-btn sm" id="btn-trigger-air-clean" style="grid-column: span 2;">
+                  <i class="fa-solid fa-wind"></i> 手動觸發 12VDC 電極空氣清洗 (脈衝動畫)
                 </button>
               </div>
             </div>
 
-            <!-- Panel Block 3: Interactive Water Parameter Sliders -->
+            <!-- 原水水質與加藥出力即時微調 -->
             <div class="panel-block">
               <div class="panel-block-title">
-                <span>水質參數現場可動化微調</span>
-                <i class="fa-solid fa-gauge text-green"></i>
+                <span>現場水質干擾與加藥出力微調</span>
+                <i class="fa-solid fa-sliders text-green"></i>
               </div>
 
-              <div style="margin-bottom: 1rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+              <div style="margin-bottom: 0.65rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.78rem;">
                   <span>沉澱池原水 pH 微調:</span>
                   <strong id="slider-val-ph" class="text-cyan">7.14 pH</strong>
                 </div>
-                <input type="range" id="slider-ph" min="5.0" max="10.0" step="0.05" value="7.14" style="width: 100%; margin-top: 0.4rem;">
+                <input type="range" id="slider-ph" min="5.0" max="9.5" step="0.05" value="7.14" style="width: 100%; margin-top: 0.25rem;">
               </div>
 
-              <div style="margin-bottom: 1rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                  <span>沉澱池原水 ORP (mV) 微調:</span>
+              <div style="margin-bottom: 0.65rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.78rem;">
+                  <span>沉澱池原水 ORP (模擬有機物負荷):</span>
                   <strong id="slider-val-orp" class="text-amber">485 mV</strong>
                 </div>
-                <input type="range" id="slider-orp" min="300" max="900" step="5" value="485" style="width: 100%; margin-top: 0.4rem;">
-              </div>
-
-              <p style="font-size: 0.75rem; color: var(--text-muted);">
-                💡 拖動滑桿可直接測試系統對「暴雨原水有機物暴增」及「消毒效能不足」之警報聯鎖反應！
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================
-         Tab 3: 雙師教學與 PBL 亮點展示
-         ============================================================ -->
-    <div id="tab-education" class="tab-panel">
-      <div class="dashboard-grid">
-        
-        <!-- 左側：Modbus RTU 工業訊號流 & NIEA 實驗室 -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">
-              <i class="fa-solid fa-code-compare text-cyan"></i> Modbus RTU / RS-485 工業訊號流透視器 (職安系物聯感測)
-            </div>
-            <button class="industrial-btn cyan" id="btn-toggle-modbus" style="padding: 0.3rem 0.8rem;">
-              <i class="fa-solid fa-pause"></i> 暫停串流
-            </button>
-          </div>
-
-          <div class="modbus-terminal" id="modbus-stream-box">
-            <!-- Modbus Packets will stream here live -->
-          </div>
-
-          <div style="margin-top: 1.5rem;" class="card">
-            <div class="card-header">
-              <div class="card-title">
-                <i class="fa-solid fa-flask-vial text-green"></i> NIEA 標準檢測與線上感測對比對數迴歸 (環工系水質分析)
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div>
-                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.8rem;">
-                  輸入 NIEA DPD 自由有效餘氯 (mg/L) 與線上 ORP (mV) 數據建立迴歸：
-                </p>
-                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; align-items: center;">
-                  <input type="number" id="input-dpd-val" placeholder="餘氯 mg/L (如0.58)" step="0.01" style="background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem 0.6rem; border-radius:6px; width:130px; font-size:0.85rem;">
-                  <input type="number" id="input-orp-val" placeholder="ORP mV (如710)" step="1" style="background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem 0.6rem; border-radius:6px; width:120px; font-size:0.85rem;">
-                  <button class="industrial-btn green" id="btn-add-dpd-point" style="padding:0.4rem 0.8rem;">
-                    <i class="fa-solid fa-plus"></i> 新增數據點
-                  </button>
-                  <button class="industrial-btn amber" id="btn-reset-dpd-points" style="padding:0.4rem 0.6rem; font-size:0.75rem;">
-                    <i class="fa-solid fa-rotate-left"></i> 重置數據
-                  </button>
-                </div>
-                <div style="font-family: var(--font-code); font-size: 0.85rem; color: var(--primary-cyan); background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px;">
-                  迴歸方程式: <br>
-                  <strong id="equation-text">ORP (mV) = 145.2 × ln(DPD) + 788.4</strong><br>
-                  <span style="color: var(--accent-green);" id="r2-score-text">決定係數 R² = 0.9842 (高度相關)</span>
-                </div>
+                <input type="range" id="slider-orp" min="260" max="700" step="5" value="485" style="width: 100%; margin-top: 0.25rem;">
               </div>
 
               <div>
-                <canvas id="chartRegression" height="140"></canvas>
+                <div style="display: flex; justify-content: space-between; font-size: 0.78rem;">
+                  <span>加藥泵投藥頻率出力 (NaOCl Gain):</span>
+                  <strong id="slider-val-dosing-gain" class="text-green">100%</strong>
+                </div>
+                <input type="range" id="slider-scada-dosing-gain" min="0" max="150" step="5" value="100" style="width: 100%; margin-top: 0.25rem;">
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 右側：PBL 闖關遊戲與 ESG SROI 戰情 -->
-        <div>
-          <div class="card pbl-badge-card" style="margin-bottom: 1.5rem;">
-            <div class="badge-icon">
-              <i class="fa-solid fa-award"></i>
-            </div>
-            <h3 style="color: #fff; margin-bottom: 0.4rem;">PBL 智慧水務工程師闖關遊戲</h3>
-            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem;">
-              情境：「大雨過後原水有機物暴增」，請調整加藥泵與過濾切換，維持飲用水法規水質！
-            </p>
-            <button class="industrial-btn amber" id="btn-start-pbl-challenge">
-              <i class="fa-solid fa-gamepad"></i> 開始 PBL 闖關挑戰
-            </button>
-          </div>
-
-          <!-- ESG & SROI 戰情計算器板 -->
+          <!-- 即時警報與系統控制日誌 -->
           <div class="card">
             <div class="card-header">
               <div class="card-title">
-                <i class="fa-solid fa-calculator text-purple"></i> ESG 淨零減碳與 SROI 社會價值動態計算器
+                <i class="fa-solid fa-terminal text-amber"></i> SCADA 即時控制與警報日誌
               </div>
-              <select id="sroi-preset-select" style="background:#1e293b; border:1px solid #334155; color:#00f2fe; padding:0.3rem 0.6rem; border-radius:6px; font-size:0.8rem; font-weight:600;">
-                <option value="baseline">基準計畫估算 (SROI 2.85)</option>
-                <option value="conservative">保守防禦估算 (SROI 1.80)</option>
-                <option value="optimistic">高效益擴充 (SROI 3.60)</option>
-                <option value="custom">-- 自訂微調數據 --</option>
-              </select>
+              <span class="status-badge green" id="badge-log-count">運轉正常</span>
             </div>
-
-            <!-- 可輸入與微調數值區 -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.2rem; background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-              <div>
-                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">總資本投入 (Inputs NTD):</label>
-                <input type="number" id="sroi-input-capital" value="420000" step="10000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
-              </div>
-              <div>
-                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">避免主管機關裁罰 (NTD):</label>
-                <input type="number" id="sroi-input-fines" value="300000" step="10000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
-              </div>
-              <div>
-                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">藥劑與電力節約效益 (NTD):</label>
-                <input type="number" id="sroi-input-savings" value="120000" step="5000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
-              </div>
-              <div>
-                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">砂濾泵設備延壽保養 (NTD):</label>
-                <input type="number" id="sroi-input-maintenance" value="80000" step="5000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
-              </div>
-              <div style="grid-column: span 2;">
-                <label style="font-size: 0.75rem; color: #94a3b8; display:block; margin-bottom:0.2rem;">學生薪資溢價與衍生產學案 (NTD):</label>
-                <input type="number" id="sroi-input-student" value="700000" step="20000" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:0.4rem; border-radius:6px; font-family:var(--font-code); font-size:0.85rem;">
+            <div style="height: 230px; overflow-y: auto;" id="event-log-container">
+              <div class="modbus-line">
+                <span class="modbus-time">[06:00:00]</span>
+                <span class="modbus-hex">SYS_OK</span>
+                <span class="modbus-desc">3D SCADA 數位孿生完成連線，沉澱池/清水池 RS-485 正常通訊中</span>
               </div>
             </div>
-
-            <!-- 即時動態運算結果 -->
-            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-              <div style="background: rgba(139, 92, 246, 0.15); padding: 1rem; border-radius: 10px; border: 1px solid var(--accent-purple); text-align: center;">
-                <div style="font-size: 0.8rem; color: #d8b4fe;">即時計算 SROI 社會投資報酬率</div>
-                <div style="font-size: 2.2rem; font-weight: 800; color: #fff; font-family: var(--font-code);" id="sroi-ratio-display">
-                  SROI = 2.85 : 1
-                </div>
-                <div style="font-size: 0.8rem; color: var(--accent-green);" id="sroi-status-text">
-                  🌟 卓越評等：每投入 1 元資本，創造 2.85 元社會成效
-                </div>
-              </div>
-
-              <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border-left: 3px solid var(--accent-green); display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <div style="font-size: 0.75rem; color: #94a3b8;">總社會產出效益金額 (Outcomes Total)</div>
-                  <div style="font-size: 1.1rem; font-weight: 700; color: var(--accent-green);" id="sroi-total-outcomes">NT$ 1,200,000</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-size: 0.75rem; color: #94a3b8;">藥劑節約/電力節能比</div>
-                  <div style="font-size: 0.9rem; font-weight: 600; color: var(--primary-cyan);" id="sroi-esg-rates">節藥 20% | 節電 15%</div>
-                </div>
-              </div>
-            </div>
-
           </div>
-        </div>
 
-      </div>
-    </div>
-
-    <!-- ============================================================
-         Tab 4: 資料匯入與動態模擬器
-         ============================================================ -->
-    <div id="tab-import" class="tab-panel">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <i class="fa-solid fa-file-csv text-cyan"></i> 水質歷史 Log 與檢測數據檔案匯入 (CSV / Excel)
-          </div>
-        </div>
-
-        <div style="border: 2px dashed var(--border-color); border-radius: 12px; padding: 2.5rem; text-align: center; background: rgba(0,0,0,0.2);" id="drop-zone">
-          <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.5rem; color: var(--primary-cyan); margin-bottom: 1rem;"></i>
-          <h3>拖曳 CSV 或 Excel 水質歷史檔案至此</h3>
-          <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
-            支援包含 Timestamp, pH, ORP, 餘氯, 泵浦狀態之連續數據檔 (或點擊下方載入範例數據 sample_data.csv)
-          </p>
-          <div style="margin-top: 1.2rem; display: flex; justify-content: center; gap: 1rem;">
-            <input type="file" id="file-input" accept=".csv" style="display: none;">
-            <button class="industrial-btn cyan" onclick="document.getElementById('file-input').click()">
-              <i class="fa-solid fa-folder-open"></i> 瀏覽電腦檔案
-            </button>
-            <button class="industrial-btn green" id="btn-load-sample">
-              <i class="fa-solid fa-database"></i> 一鍵載入計畫範例檔 (sample_data.csv)
-            </button>
-          </div>
-        </div>
-
-        <div style="margin-top: 1.5rem;">
-          <h4 style="color: #fff; margin-bottom: 0.8rem;">匯入數據預覽與時序校驗</h4>
-          <div style="max-height: 250px; overflow-y: auto;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>時間戳記</th>
-                  <th>沉澱池 pH</th>
-                  <th>沉澱池 ORP</th>
-                  <th>清水池 pH</th>
-                  <th>清水池 ORP</th>
-                  <th>推算餘氯</th>
-                  <th>泵浦 A 狀態</th>
-                  <th>泵浦 B 狀態</th>
-                  <th>備註說明</th>
-                </tr>
-              </thead>
-              <tbody id="table-imported-body">
-                <!-- Data populated dynamically -->
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </div>
 
     <!-- ============================================================
-         Tab 5: 長期數據整理與法定報表
+         Tab 2: 3D 加氯 / 減氯與 pH 物種解離動態模擬器
          ============================================================ -->
-    <div id="tab-reports" class="tab-panel">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <i class="fa-solid fa-file-signature text-cyan"></i> 《飲用水管理條例》法定備查與設備維護紀錄表 (保存2年)
-          </div>
-          <div style="display: flex; gap: 0.8rem;" class="no-print">
-            <button class="industrial-btn green" id="btn-export-csv">
-              <i class="fa-solid fa-file-excel"></i> 匯出 CSV 數據庫
-            </button>
-            <button class="industrial-btn cyan" onclick="window.print()">
-              <i class="fa-solid fa-print"></i> 友善列印 / 存為 PDF 報表
-            </button>
-          </div>
-        </div>
+    <div id="tab-chlorine-game" class="tab-panel">
 
-        <!-- 趨勢圖表 -->
-        <div style="margin-bottom: 2rem;">
-          <canvas id="chartLongTerm" height="100"></canvas>
-        </div>
-
-        <!-- 法定報表預覽 (Print-Ready Document) -->
-        <div style="background: #fff; color: #000; padding: 2rem; border-radius: 8px;" id="printable-report">
-          <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 1rem; margin-bottom: 1rem;">
-            <h2 style="font-size: 1.4rem; font-weight: 700;">輔英科技大學 水質全時監測．淨水程序智慧控制．類職場實作示範基地 - 連續維護與監測紀錄表</h2>
-            <p style="font-size: 0.9rem; margin-top: 0.4rem;">
-              依據《飲用水管理條例》及《飲用水連續供水固定設備使用及維護管理辦法》第七條規定保存二年
+      <!-- 遊戲頂部狀態列與關卡選擇 -->
+      <div class="card" style="margin-bottom: 1.2rem; background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(14, 165, 233, 0.14)); border-color: var(--primary-cyan);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+              <span class="status-badge cyan"><i class="fa-solid fa-cubes"></i> 3D 互動化學實驗室</span>
+              <h2 style="font-size: 1.25rem; color: #fff; margin: 0;">3D 加氯 / 減氯反應器與 pH 物種解離動態模擬器</h2>
+            </div>
+            <p style="font-size: 0.82rem; color: #94a3b8;">
+              即時觀察 3D 反應槽內 <strong class="text-cyan">HOCl (強殺菌次氯酸)</strong> 與 <strong class="text-green">OCl⁻ (弱殺菌次氯酸根)</strong> 分子雲隨 pH 解離變化，並控制 NaOCl 加氯與 NaHSO₃ 脫氯中和！
             </p>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 0.85rem; margin-bottom: 1rem;">
-            <div>管理單位：總務處營繕組 / 環生學院</div>
-            <div>設置地點：輔英科技大學校區自設水源地淨水場</div>
-            <div>監控設備：Smart Box DO4-ABS-N / JNC SCADA</div>
-            <div>備查週期：月維護、每季大腸桿菌與硝酸鹽氮檢測</div>
+          <div style="display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;">
+            <div style="background: rgba(0,0,0,0.45); padding: 0.45rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+              <div style="font-size: 0.68rem; color: #94a3b8;">模式 / 狀態</div>
+              <div style="font-size: 0.9rem; font-weight: 700; color: var(--primary-cyan);" id="cg-mode-text">自由動態沙盒</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.45); padding: 0.45rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+              <div style="font-size: 0.68rem; color: #94a3b8;">關卡時間</div>
+              <div style="font-size: 1.1rem; font-weight: 800; color: var(--accent-amber); font-family: var(--font-code);" id="cg-timer-display">-- s</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.45); padding: 0.45rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+              <div style="font-size: 0.68rem; color: #94a3b8;">目前得分</div>
+              <div style="font-size: 1.1rem; font-weight: 800; color: var(--accent-green); font-family: var(--font-code);" id="cg-score-display">100</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 0.95rem; padding-top: 0.85rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center;">
+          <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 600;"><i class="fa-solid fa-trophy text-amber"></i> PBL 闖關任務：</span>
+          <button class="industrial-btn cyan sm" id="btn-cg-quest-1"><i class="fa-solid fa-cloud-showers-heavy"></i> 關卡 1：暴雨有機物處置</button>
+          <button class="industrial-btn amber sm" id="btn-cg-quest-2"><i class="fa-solid fa-triangle-exclamation"></i> 關卡 2：過度加氯中和救援</button>
+          <button class="industrial-btn green sm" id="btn-cg-quest-3"><i class="fa-solid fa-award"></i> 關卡 3：60秒動態流量恆定</button>
+          <button class="industrial-btn purple sm" id="btn-ph-challenge"><i class="fa-solid fa-vial"></i> pH 黃金區間配比挑戰</button>
+          <button class="industrial-btn sm" id="btn-cg-sandbox" style="margin-left: auto;"><i class="fa-solid fa-rotate-left"></i> 自由沙盒</button>
+          <button class="industrial-btn blue sm" id="btn-back-to-pbl-1"><i class="fa-solid fa-arrow-left"></i> 返回教學頁</button>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+
+        <!-- 左欄：Three.js 3D 雙向加減氯反應器與分子雲 + 控制滑桿 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-atom text-cyan"></i> 3D 雙向加減氯化學反應槽 (3D Molecular Reactor)
+            </div>
+            <span class="badge-status green" id="cg-status-badge">水質法規合規 (PASS)</span>
           </div>
 
+          <div class="viewport-3d-wrap medium" id="chlorine-3d-viewport">
+            <div class="hud-3d-toolbar">
+              <div class="hud-3d-group">
+                <button class="cam-btn cl3d-cam-btn active" data-cam="overview"><i class="fa-solid fa-eye"></i> 反應槽全景</button>
+                <button class="cam-btn cl3d-cam-btn" data-cam="molecules"><i class="fa-solid fa-atom"></i> HOCl/OCl⁻ 分子特寫</button>
+                <button class="cam-btn cl3d-cam-btn" data-cam="top"><i class="fa-solid fa-fan"></i> 俯視攪拌渦流</button>
+                <button class="cam-btn cl3d-cam-btn" data-cam="dosing"><i class="fa-solid fa-flask"></i> 藥劑投加系統</button>
+              </div>
+            </div>
+            <div class="hud-3d-labels-layer" id="chlorine-3d-labels"></div>
+            <div class="hud-3d-hint">
+              <i class="fa-solid fa-circle text-cyan"></i> 青色球體 = HOCl (80倍殺菌力) &nbsp;|&nbsp; <i class="fa-solid fa-circle text-green"></i> 綠色球體 = OCl⁻ (弱殺菌)
+            </div>
+          </div>
+
+          <!-- 藥劑控制區 -->
+          <div style="margin-top: 1rem; background: rgba(0,0,0,0.3); padding: 0.95rem; border-radius: 10px; border: 1px solid var(--border-color);">
+            <div class="grid-2col" style="margin-bottom: 0.8rem;">
+              <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                  <label style="font-size: 0.82rem; color: #38bdf8; font-weight: 700;"><i class="fa-solid fa-plus-circle"></i> 次氯酸鈉 NaOCl 加藥量：</label>
+                  <span style="font-family: var(--font-code); font-size: 0.88rem; font-weight: 700; color: #38bdf8;" id="cg-val-naocl-rate">35 mL/min</span>
+                </div>
+                <input type="range" id="cg-slider-naocl" min="0" max="100" value="35" style="width: 100%; accent-color: #38bdf8;">
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                  <label style="font-size: 0.82rem; color: #34d399; font-weight: 700;"><i class="fa-solid fa-minus-circle"></i> 亞硫酸氫鈉 NaHSO₃ 脫氯量：</label>
+                  <span style="font-family: var(--font-code); font-size: 0.88rem; font-weight: 700; color: #34d399;" id="cg-val-nahso3-rate">0 mL/min</span>
+                </div>
+                <input type="range" id="cg-slider-nahso3" min="0" max="100" value="0" style="width: 100%; accent-color: #34d399;">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.8rem; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 0.8rem;">
+              <div style="flex: 1; min-width: 190px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 0.2rem;">
+                  <span style="color: #94a3b8;">原水進水流量 (Inflow):</span>
+                  <span style="font-family: var(--font-code);" id="cg-val-inflow">50 L/min</span>
+                </div>
+                <input type="range" id="cg-slider-inflow" min="10" max="100" value="50" style="width: 100%;">
+              </div>
+              <button class="industrial-btn red sm" id="btn-cg-toggle-organic">
+                <i class="fa-solid fa-cloud-rain"></i> 觸發暴雨有機物飆升
+              </button>
+            </div>
+
+            <!-- 藥劑源與酸鹼滴定 -->
+            <div style="padding-top: 0.75rem; border-top: 1px dashed rgba(255,255,255,0.14);">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.65rem;">
+                <div style="display: flex; gap: 0.45rem; align-items: center;">
+                  <span style="font-size: 0.76rem; color: #94a3b8;">消毒藥劑源：</span>
+                  <button class="industrial-btn cyan sm" id="btn-source-naocl">次氯酸鈉 NaOCl</button>
+                  <button class="industrial-btn sm" id="btn-source-cl2" style="opacity: 0.75;">氯氣 Cl₂</button>
+                </div>
+                <div style="font-family: var(--font-code); font-size: 0.76rem; color: var(--primary-cyan);" id="chem-source-eq">
+                  NaOCl + H₂O ⇌ HOCl + Na⁺ + OH⁻
+                </div>
+              </div>
+              <div style="font-size: 0.73rem; color: #94a3b8; margin-bottom: 0.65rem;" id="chem-source-desc">
+                NaOCl 溶於水釋放 OH⁻ 使水體 pH 提升；解離產生的 HOCl 殺菌力為 OCl⁻ 的 80 倍。
+              </div>
+
+              <div class="grid-2col" style="margin-bottom: 0.65rem;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: #f97316; font-weight: 700;">
+                    <span>滴定加酸 HCl (降 pH):</span>
+                    <span id="spec-val-hcl-dose">0.0 mL/min</span>
+                  </div>
+                  <input type="range" id="slider-spec-hcl" min="0" max="50" step="0.5" value="0" style="width: 100%; accent-color: #f97316;">
+                </div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: #60a5fa; font-weight: 700;">
+                    <span>滴定加鹼 NaOH (升 pH):</span>
+                    <span id="spec-val-naoh-dose">0.0 mL/min</span>
+                  </div>
+                  <input type="range" id="slider-spec-naoh" min="0" max="50" step="0.5" value="0" style="width: 100%; accent-color: #60a5fa;">
+                </div>
+              </div>
+
+              <div class="grid-2col" style="margin-bottom: 0.65rem;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.78rem;">
+                    <span>當前水體即時 pH 值:</span>
+                    <strong class="text-green" id="speciation-ph-val">7.20 pH</strong>
+                  </div>
+                  <input type="range" id="slider-speciation-ph" min="4.0" max="10.0" step="0.1" value="7.2" style="width: 100%; accent-color: #10b981;">
+                </div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.78rem;">
+                    <span>解離分析總餘氯設定:</span>
+                    <strong class="text-cyan" id="speciation-dose-val">0.60 mg/L</strong>
+                  </div>
+                  <input type="range" id="slider-speciation-dose" min="0.10" max="3.00" step="0.05" value="0.60" style="width: 100%;">
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="industrial-btn amber sm" id="btn-titrate-hcl"><i class="fa-solid fa-plus"></i> 加酸 +5</button>
+                <button class="industrial-btn blue sm" id="btn-titrate-naoh"><i class="fa-solid fa-plus"></i> 加鹼 +5</button>
+                <button class="industrial-btn sm" id="btn-titrate-reset"><i class="fa-solid fa-rotate-left"></i> 重置酸鹼</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右欄：水質指標 + 物種解離卡片 + 雙趨勢圖 -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+
+          <div class="grid-2col" style="gap: 0.75rem;">
+            <div class="metric-card green" id="card-cg-chlorine">
+              <div class="metric-label">自由有效餘氯 Free Cl₂</div>
+              <div class="metric-value" id="cg-metric-chlorine">0.58 <span class="metric-unit">mg/L</span></div>
+              <div class="metric-sub" id="cg-sub-chlorine">法規合格 (0.2 ~ 1.0 mg/L)</div>
+            </div>
+            <div class="metric-card cyan" id="card-cg-orp">
+              <div class="metric-label">氧化還原電位 ORP</div>
+              <div class="metric-value" id="cg-metric-orp">710 <span class="metric-unit">mV</span></div>
+              <div class="metric-sub" id="cg-sub-orp">極佳消毒能力 (&gt; 650mV)</div>
+            </div>
+            <div class="metric-card purple" id="card-cg-thm">
+              <div class="metric-label">THMs 消毒副產物風險</div>
+              <div class="metric-value" id="cg-metric-thm">8 <span class="metric-unit">ppb</span></div>
+              <div class="metric-sub" id="cg-sub-thm">安全標準 (&lt; 80 ppb)</div>
+            </div>
+            <div class="metric-card green" id="card-cg-pathogen">
+              <div class="metric-label">大腸桿菌與病原防護</div>
+              <div class="metric-value" id="cg-metric-pathogen">99.99 <span class="metric-unit">%</span></div>
+              <div class="metric-sub" id="cg-sub-pathogen">完全滅菌防護</div>
+            </div>
+          </div>
+
+          <div class="grid-3col" style="gap: 0.75rem;">
+            <div class="metric-card cyan" style="padding: 0.7rem;">
+              <div class="metric-label">[HOCl] 強殺菌體</div>
+              <div class="metric-value" style="font-size: 1.12rem;" id="spec-val-hocl">0.41 <span class="metric-unit">mg/L</span></div>
+              <div class="metric-sub text-cyan" id="spec-pct-hocl">佔比 68.1%</div>
+            </div>
+            <div class="metric-card green" style="padding: 0.7rem;">
+              <div class="metric-label">[OCl⁻] 弱殺菌體</div>
+              <div class="metric-value" style="font-size: 1.12rem;" id="spec-val-ocl">0.19 <span class="metric-unit">mg/L</span></div>
+              <div class="metric-sub text-green" id="spec-pct-ocl">佔比 31.9%</div>
+            </div>
+            <div class="metric-card purple" style="padding: 0.7rem;">
+              <div class="metric-label">相對殺菌效能</div>
+              <div class="metric-value" style="font-size: 1.12rem;" id="spec-val-power">68.5 <span class="metric-unit">%</span></div>
+              <div class="metric-sub" id="spec-sub-power">黃金消毒區</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header" style="margin-bottom: 0.5rem;">
+              <div class="card-title"><i class="fa-solid fa-chart-line text-cyan"></i> 即時加/減氯動態時序曲線</div>
+              <span style="font-size: 0.72rem; color: #94a3b8;">法規目標：0.2 ~ 1.0 mg/L</span>
+            </div>
+            <div style="position: relative; height: 185px;">
+              <canvas id="chartChlorineGame"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header" style="margin-bottom: 0.5rem;">
+              <div class="card-title"><i class="fa-solid fa-chart-area text-purple"></i> pH 熱力學物種解離曲線 (pKₐ=7.53)</div>
+              <span class="status-badge green" id="speciation-zone-tag">黃金消毒區 (pH 6.5 ~ 7.5)</span>
+            </div>
+            <div style="position: relative; height: 185px;">
+              <canvas id="chartPhSpeciation"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         Tab 3: 各單元系統用電量 3D 評估與節能分析
+         ============================================================ -->
+    <div id="tab-energy" class="tab-panel">
+
+      <!-- 用電核心 KPI 摘要列 -->
+      <div class="metrics-row">
+        <div class="metric-card cyan">
+          <div class="metric-label">全系統即時總負載功率</div>
+          <div class="metric-value" id="eng-total-kw">3.98 <span class="metric-unit">kW</span></div>
+          <div class="metric-sub">與 3D SCADA 設備啟停即時連動</div>
+        </div>
+        <div class="metric-card green">
+          <div class="metric-label">預估每日總耗電量</div>
+          <div class="metric-value" id="eng-daily-kwh">58.4 <span class="metric-unit">kWh/日</span></div>
+          <div class="metric-sub">依據各單元運轉排程評估</div>
+        </div>
+        <div class="metric-card amber">
+          <div class="metric-label">預估每月電費支出</div>
+          <div class="metric-value" id="eng-monthly-cost">NT$ 6,745</div>
+          <div class="metric-sub">可依台電時間電價即時試算</div>
+        </div>
+        <div class="metric-card purple">
+          <div class="metric-label">每月電力碳排放量</div>
+          <div class="metric-value" id="eng-monthly-co2">865 <span class="metric-unit">kg CO₂e</span></div>
+          <div class="metric-sub">經濟部能源署電力排碳係數評估</div>
+        </div>
+        <div class="metric-card green">
+          <div class="metric-label">智慧交替控制節電效益</div>
+          <div class="metric-value" id="eng-saving-pct">16.8 <span class="metric-unit">%</span></div>
+          <div class="metric-sub">相比 24h 常開無控管基準線</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid" style="margin-bottom: 1.2rem;">
+
+        <!-- 左欄：3D 各單元即時電力柱狀視覺化 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-bolt text-cyan"></i> 各單元系統 3D 即時用電負載能量塔 (3D Unit Power Twin)
+            </div>
+            <span class="status-badge cyan">即時同步 SCADA 繼電器狀態</span>
+          </div>
+          <div class="viewport-3d-wrap medium" id="energy-3d-viewport">
+            <div class="hud-3d-labels-layer" id="energy-3d-labels"></div>
+            <div class="hud-3d-hint">
+              <i class="fa-solid fa-cube"></i> 拖曳可 360° 檢視各單元即時負載高度；於 SCADA 頁切換泵浦即動態變化
+            </div>
+          </div>
+        </div>
+
+        <!-- 右欄：電價費率、排程評估設定與佔比圖 -->
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-sliders text-amber"></i> 用電費率與運轉排程評估參數</div>
+              <div style="display: flex; gap: 0.45rem;">
+                <button class="industrial-btn purple sm" id="btn-sync-energy-sroi"><i class="fa-solid fa-arrows-rotate"></i> 同步至 SROI</button>
+                <button class="industrial-btn green sm" id="btn-export-energy-csv"><i class="fa-solid fa-file-csv"></i> 匯出用電評估</button>
+              </div>
+            </div>
+            <div class="grid-3col">
+              <div>
+                <label style="font-size: 0.74rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">平均電價 (NT$/kWh)</label>
+                <input type="number" id="eng-tariff-rate" class="form-input" value="3.85" step="0.1" min="1.5" max="10" style="width: 100%;">
+              </div>
+              <div>
+                <label style="font-size: 0.74rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">砂濾泵日運轉 (hr/日)</label>
+                <input type="number" id="eng-pump-hours" class="form-input" value="14" step="1" min="2" max="24" style="width: 100%;">
+              </div>
+              <div>
+                <label style="font-size: 0.74rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">排碳係數 (kg/kWh)</label>
+                <input type="number" id="eng-carbon-factor" class="form-input" value="0.494" step="0.005" min="0.2" max="0.9" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header" style="margin-bottom: 0.5rem;">
+              <div class="card-title"><i class="fa-solid fa-chart-pie text-cyan"></i> 各單元日耗電量佔比與 24h 負載預測</div>
+            </div>
+            <div class="grid-2col">
+              <div style="position: relative; height: 215px;">
+                <canvas id="chartEnergyPie"></canvas>
+              </div>
+              <div style="position: relative; height: 215px;">
+                <canvas id="chartEnergy24h"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 各單元系統用電量詳細評估明細表 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-table-list text-green"></i> 各單元系統用電量評估明細表 (Unit-by-Unit Energy Audit)</div>
+          <span style="font-size: 0.76rem; color: #94a3b8;">含額定功率、即時功率、功率因數、日耗電、預估月電費及碳排放</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>設備單元名稱</th>
+                <th>運轉狀態</th>
+                <th>額定功率 (kW)</th>
+                <th>即時功率 (kW)</th>
+                <th>功率因數 (PF)</th>
+                <th>日運轉時數</th>
+                <th>預估日耗電 (kWh)</th>
+                <th>預估月電費 (NT$)</th>
+                <th>月碳排 (kg CO₂e)</th>
+                <th style="width: 140px;">耗電佔比</th>
+              </tr>
+            </thead>
+            <tbody id="table-energy-units-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================
+         Tab 4: 資料匯入監控面、水質控管與數據管理輸出
+         ============================================================ -->
+    <div id="tab-data-qc" class="tab-panel">
+
+      <!-- 頂部：資料匯入區 + 3D 監控回放控制列 -->
+      <div class="grid-2col no-print" style="margin-bottom: 1.2rem;">
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-file-import text-cyan"></i> 水質歷史與檢測資料匯入 (CSV 拖曳 / 瀏覽)</div>
+          </div>
+          <div class="drop-zone" id="drop-zone">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2rem; color: var(--primary-cyan); margin-bottom: 0.5rem;"></i>
+            <h4 style="color: #fff;">拖曳 CSV 檔案至此，或點擊載入測試數據</h4>
+            <p style="font-size: 0.78rem; color: #94a3b8; margin: 0.4rem 0 0.9rem;">
+              支援 Timestamp, pH, ORP, 餘氯, 泵浦狀態等欄位，匯入後自動繪製監控趨勢並可即時回放至 3D SCADA！
+            </p>
+            <input type="file" id="file-input" accept=".csv,.txt" style="display: none;">
+            <div style="display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap;">
+              <button class="industrial-btn cyan sm" onclick="document.getElementById('file-input').click()">
+                <i class="fa-solid fa-folder-open"></i> 瀏覽電腦 CSV
+              </button>
+              <button class="industrial-btn green sm" id="btn-load-sample">
+                <i class="fa-solid fa-database"></i> 載入範例檔 (sample_data.csv)
+              </button>
+              <button class="industrial-btn red sm" id="btn-load-alarm-sample">
+                <i class="fa-solid fa-triangle-exclamation"></i> 載入「餘氯不足異常」情境檔
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 匯入資料推送至 3D 監控面回放控制器 + 水質控管摘要 -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-tv text-purple"></i> 匯入資料呈現至 3D SCADA 監控面回放</div>
+              <span class="status-badge purple" id="replay-progress-text">待命中 (0 / 0)</span>
+            </div>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.85rem;">
+              啟動回放後，系統將把匯入的歷史水質逐筆推送至「3D SCADA 戰情室」，動態驅動 3D 水色、泵浦、用電評估與餘氯不足 ALARM 告警！
+            </p>
+            <div style="display: flex; gap: 0.55rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+              <button class="industrial-btn purple sm" id="btn-replay-play"><i class="fa-solid fa-play"></i> 開始回放至 3D 監控</button>
+              <button class="industrial-btn amber sm" id="btn-replay-pause"><i class="fa-solid fa-pause"></i> 暫停</button>
+              <button class="industrial-btn sm" id="btn-replay-stop"><i class="fa-solid fa-stop"></i> 停止回放</button>
+              <select id="replay-speed" class="form-select" style="font-size: 0.76rem;">
+                <option value="2000">1x (每 2 秒/筆)</option>
+                <option value="1000" selected>2x (每 1 秒/筆)</option>
+                <option value="500">4x (每 0.5 秒/筆)</option>
+              </select>
+              <button class="industrial-btn cyan sm" id="btn-jump-scada-watch"><i class="fa-solid fa-cube"></i> 前往觀看 3D 監控</button>
+            </div>
+          </div>
+
+          <!-- 水質控管 QC KPI 摘要 -->
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;">
+            <div style="background: rgba(0,0,0,0.3); padding: 0.55rem; border-radius: 8px; text-align: center; border: 1px solid var(--border-color);">
+              <div style="font-size: 0.68rem; color: #94a3b8;">總筆數</div>
+              <div style="font-size: 1.05rem; font-weight: 800; font-family: var(--font-code);" id="qc-total-rows">0</div>
+            </div>
+            <div style="background: rgba(16,185,129,0.1); padding: 0.55rem; border-radius: 8px; text-align: center; border: 1px solid rgba(16,185,129,0.4);">
+              <div style="font-size: 0.68rem; color: #6ee7b7;">法規合規率</div>
+              <div style="font-size: 1.05rem; font-weight: 800; color: #34d399; font-family: var(--font-code);" id="qc-pass-rate">100%</div>
+            </div>
+            <div style="background: rgba(239,68,68,0.12); padding: 0.55rem; border-radius: 8px; text-align: center; border: 1px solid rgba(239,68,68,0.45);">
+              <div style="font-size: 0.68rem; color: #fca5a5;">餘氯異常次數</div>
+              <div style="font-size: 1.05rem; font-weight: 800; color: #f87171; font-family: var(--font-code);" id="qc-low-cl-count">0</div>
+            </div>
+            <div style="background: rgba(0,242,254,0.08); padding: 0.55rem; border-radius: 8px; text-align: center; border: 1px solid rgba(0,242,254,0.35);">
+              <div style="font-size: 0.68rem; color: #7dd3fc;">平均餘氯</div>
+              <div style="font-size: 1.05rem; font-weight: 800; color: var(--primary-cyan); font-family: var(--font-code);" id="qc-avg-cl">0.56</div>
+            </div>
+            <div style="background: rgba(245,158,11,0.08); padding: 0.55rem; border-radius: 8px; text-align: center; border: 1px solid rgba(245,158,11,0.35);">
+              <div style="font-size: 0.68rem; color: #fcd34d;">平均 ORP</div>
+              <div style="font-size: 1.05rem; font-weight: 800; color: #fbbf24; font-family: var(--font-code);" id="qc-avg-orp">702</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 匯入資料多軸監控趨勢圖 (水質控管面) -->
+      <div class="card no-print" style="margin-bottom: 1.2rem;">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-chart-line text-cyan"></i> 匯入數據水質控管監控趨勢圖 (ORP、自由餘氯與法規紅線)</div>
+          <span style="font-size: 0.76rem; color: #94a3b8;">紅色虛線標示自由餘氯法規下限 (0.20 mg/L)</span>
+        </div>
+        <div style="position: relative; height: 240px;">
+          <canvas id="chartLongTerm"></canvas>
+        </div>
+      </div>
+
+      <!-- 數據管理、篩選、手動新增與多格式輸出 -->
+      <div class="card no-print" style="margin-bottom: 1.2rem;">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-table text-green"></i> 數據管理、異常篩選與檔案輸出</div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <select id="filter-qc-status" class="form-select">
+              <option value="ALL">顯示全部紀錄</option>
+              <option value="ALARM">僅顯示異常 / 餘氯不足</option>
+              <option value="PASS">僅顯示法規合格</option>
+            </select>
+            <input type="text" id="filter-search-text" class="form-input" placeholder="搜尋時間或備註..." style="width: 170px;">
+            <button class="industrial-btn green sm" id="btn-export-csv"><i class="fa-solid fa-file-excel"></i> 匯出 CSV (Excel)</button>
+            <button class="industrial-btn purple sm" id="btn-export-json"><i class="fa-solid fa-file-code"></i> 匯出 JSON 備份</button>
+            <button class="industrial-btn cyan sm" id="btn-print-statutory"><i class="fa-solid fa-print"></i> 列印 / PDF 法定報表</button>
+          </div>
+        </div>
+
+        <!-- 手動補登水質檢測紀錄列 -->
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; background: rgba(0,0,0,0.25); padding: 0.65rem 0.8rem; border-radius: 8px; margin-bottom: 0.85rem;">
+          <span style="font-size: 0.78rem; color: var(--primary-cyan); font-weight: 700;"><i class="fa-solid fa-plus-circle"></i> 手動新增檢驗筆數：</span>
+          <input type="number" id="add-rec-sed-ph" class="form-input" placeholder="原水pH (7.1)" step="0.01" style="width: 112px;">
+          <input type="number" id="add-rec-sed-orp" class="form-input" placeholder="原水ORP (480)" step="1" style="width: 120px;">
+          <input type="number" id="add-rec-clean-ph" class="form-input" placeholder="清水pH (7.3)" step="0.01" style="width: 112px;">
+          <input type="number" id="add-rec-clean-orp" class="form-input" placeholder="清水ORP (705)" step="1" style="width: 125px;">
+          <input type="text" id="add-rec-note" class="form-input" placeholder="備註 (如人工採樣校正)" style="flex: 1; min-width: 140px;">
+          <button class="industrial-btn cyan sm" id="btn-add-manual-record"><i class="fa-solid fa-check"></i> 新增至資料庫</button>
+        </div>
+
+        <div style="max-height: 290px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>時間戳記</th>
+                <th>沉澱池 pH</th>
+                <th>沉澱池 ORP</th>
+                <th>清水池 pH</th>
+                <th>清水池 ORP</th>
+                <th>自由餘氯 (mg/L)</th>
+                <th>泵浦 A/B</th>
+                <th>控管判定</th>
+                <th>備註說明</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="table-imported-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 法定備查報表 (Print-Ready Document) -->
+      <div class="card">
+        <div class="card-header no-print">
+          <div class="card-title"><i class="fa-solid fa-file-signature text-cyan"></i> 《飲用水管理條例》法定備查與維護紀錄表預覽 (保存2年)</div>
+        </div>
+        <div style="background: #fff; color: #000; padding: 1.8rem; border-radius: 8px;" id="printable-report">
+          <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 0.8rem; margin-bottom: 0.9rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700;">輔英科技大學 水質全時監測．淨水程序智慧控制示範基地 - 連續維護與水質控管紀錄表</h2>
+            <p style="font-size: 0.85rem; margin-top: 0.3rem;">依據《飲用水管理條例》及《飲用水連續供水固定設備使用及維護管理辦法》規定保存二年備查</p>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 0.82rem; margin-bottom: 0.9rem; gap: 0.3rem;">
+            <div>管理單位：總務處營繕組 / 環生學院</div>
+            <div>設置地點：輔英科技大學校區自設水源地淨水場</div>
+            <div>監控設備：Smart Box DO4-ABS-N / 3D SCADA 系統</div>
+            <div>備查週期：日監測、月維護、每季大腸桿菌與硝酸鹽氮檢測</div>
+          </div>
           <table class="data-table" style="color: #000;">
             <thead>
-              <tr style="background: #f1f5f9; color: #000;">
-                <th style="color:#000;">日期</th>
+              <tr style="background: #f1f5f9;">
+                <th style="color:#000;">日期時間</th>
                 <th style="color:#000;">沉澱池 pH</th>
                 <th style="color:#000;">沉澱池 ORP</th>
                 <th style="color:#000;">清水池 pH</th>
@@ -724,400 +979,142 @@
                 <th style="color:#000;">查核簽章</th>
               </tr>
             </thead>
-            <tbody id="table-statutory-body">
-              <!-- Report rows -->
-            </tbody>
+            <tbody id="table-statutory-body"></tbody>
           </table>
-
-          <div style="margin-top: 2rem; display: flex; justify-content: space-between; font-size: 0.85rem;">
+          <div style="margin-top: 1.8rem; display: flex; justify-content: space-between; font-size: 0.85rem;">
             <div>巡檢人員簽章：__________________</div>
             <div>營繕組主管：__________________</div>
             <div>環安衛中心主管：__________________</div>
           </div>
         </div>
       </div>
+
     </div>
 
     <!-- ============================================================
-         Tab 6: 加氯 / 減氯水質控制與 pH 物種解離動態模擬器
+         Tab 5: 雙師教學、3D 通訊架構與 PBL / SROI 亮點
          ============================================================ -->
-    <div id="tab-chlorine-game" class="tab-panel">
-      
-      <!-- 遊戲頂部狀態列與模式選擇 -->
-      <div class="card game-header-card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(14, 165, 233, 0.15)); border: 1px solid var(--primary-cyan);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-          <div>
-            <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.3rem;">
-              <span class="status-badge" style="background: rgba(0, 242, 254, 0.2); color: var(--primary-cyan); font-weight: bold; border-color: var(--primary-cyan);">
-                <i class="fa-solid fa-gamepad"></i> PBL 互動化學實驗室
-              </span>
-              <h2 style="font-size: 1.4rem; color: #fff; margin: 0;">加氯 / 減氯水質控制動態模擬遊戲</h2>
-            </div>
-            <p style="font-size: 0.85rem; color: #94a3b8;">
-              動態控制次氯酸鈉 (<strong style="color:#38bdf8;">NaOCl 加氯</strong>) 與亞硫酸氫鈉 (<strong style="color:#34d399;">NaHSO₃ 減氯中和</strong>)，應對有機物干擾，將自由有效餘氯精準維持於法規標準 (0.2 ~ 1.0 mg/L)！
-            </p>
-          </div>
-
-          <!-- 遊戲指標與控制按鈕 -->
-          <div style="display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;">
-            <div class="game-stat-box" style="background: rgba(0,0,0,0.4); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-              <div style="font-size: 0.7rem; color: #94a3b8;">模式 / 狀態</div>
-              <div style="font-size: 0.95rem; font-weight: 700; color: var(--primary-cyan);" id="cg-mode-text">自由動態沙盒</div>
-            </div>
-
-            <div class="game-stat-box" style="background: rgba(0,0,0,0.4); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-              <div style="font-size: 0.7rem; color: #94a3b8;">關卡時間</div>
-              <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-amber); font-family: var(--font-code);" id="cg-timer-display">-- s</div>
-            </div>
-
-            <div class="game-stat-box" style="background: rgba(0,0,0,0.4); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-              <div style="font-size: 0.7rem; color: #94a3b8;">目前得分</div>
-              <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); font-family: var(--font-code);" id="cg-score-display">100</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 闖關關卡選擇列 -->
-        <div style="margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center;">
-          <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;"><i class="fa-solid fa-trophy text-amber"></i> 選擇 PBL 闖關任務：</span>
-          <button class="industrial-btn cyan" id="btn-cg-quest-1" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
-            <i class="fa-solid fa-cloud-showers-heavy"></i> 關卡 1：暴雨有機物過高緊急處置
-          </button>
-          <button class="industrial-btn amber" id="btn-cg-quest-2" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
-            <i class="fa-solid fa-triangle-exclamation"></i> 關卡 2：加藥泵過度加氯中和救援
-          </button>
-          <button class="industrial-btn green" id="btn-cg-quest-3" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
-            <i class="fa-solid fa-award"></i> 關卡 3：60秒動態流量恆定大考驗
-          </button>
-          <button class="industrial-btn blue" id="btn-back-to-pbl-1" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-left: auto;">
-            <i class="fa-solid fa-arrow-left"></i> 返回雙師教學與 PBL 展示
-          </button>
-          <button class="industrial-btn" id="btn-cg-sandbox" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(255,255,255,0.1); color: #fff;">
-            <i class="fa-solid fa-rotate-left"></i> 切回自由沙盒
-          </button>
-        </div>
-      </div>
-
-      <!-- 遊戲核心雙欄布局：左側 SVG 動態化學反應器與即時控制，右側即時數據與 Chart.js 趨勢圖 -->
+    <div id="tab-education" class="tab-panel">
       <div class="dashboard-grid">
-        
-        <!-- 左欄：SVG 化學反應槽動畫與控制面板 -->
-        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-          <div class="card-header" style="margin-bottom: 0.5rem;">
-            <div class="card-title">
-              <i class="fa-solid fa-vial-circle-check text-cyan"></i> 雙向加減氯反應器 (Interactive Chemical Reactor Engine)
+
+        <!-- 左欄：3D IoT 通訊視圖 + Modbus RTU 封包串流 + NIEA 迴歸分析 -->
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-network-wired text-cyan"></i> 3D RS-485 / Modbus RTU 工業訊號流透視 (職安系物聯感測)</div>
+              <button class="industrial-btn cyan sm" id="btn-toggle-modbus"><i class="fa-solid fa-pause"></i> 暫停串流</button>
             </div>
-            <span class="badge-status green" id="cg-status-badge">水質法規合規</span>
+            <div class="viewport-3d-wrap compact" id="edu-3d-viewport" style="margin-bottom: 0.85rem;">
+              <div class="hud-3d-labels-layer" id="edu-3d-labels"></div>
+            </div>
+            <div class="modbus-terminal" id="modbus-stream-box"></div>
           </div>
 
-          <!-- SVG 化學反應器畫布 -->
-          <div class="scada-hmi-container" style="background: #090d16; border-radius: 10px; border: 1px solid var(--border-color); padding: 0.5rem; position: relative;">
-            <svg class="scada-diagram" viewBox="0 0 1000 450" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="cgWaterNormal" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop id="cg-grad-stop1" offset="0%" stop-color="#0284c7" stop-opacity="0.75"/>
-                  <stop id="cg-grad-stop2" offset="100%" stop-color="#0369a1" stop-opacity="0.9"/>
-                </linearGradient>
-                <linearGradient id="cgNaOClGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9"/>
-                  <stop offset="100%" stop-color="#0284c7" stop-opacity="0.9"/>
-                </linearGradient>
-                <linearGradient id="cgNaHSO3Grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#34d399" stop-opacity="0.9"/>
-                  <stop offset="100%" stop-color="#059669" stop-opacity="0.9"/>
-                </linearGradient>
-              </defs>
-
-              <rect x="0" y="0" width="1000" height="450" fill="#0b1120" rx="10"/>
-
-              <!-- 左側：次氯酸鈉 (NaOCl) 儲藥桶與加藥泵 -->
-              <g transform="translate(40, 40)">
-                <rect x="0" y="0" width="130" height="150" fill="url(#cgNaOClGrad)" rx="8" stroke="#38bdf8" stroke-width="2"/>
-                <rect x="10" y="10" width="110" height="24" fill="rgba(15,23,42,0.7)" rx="4"/>
-                <text x="65" y="27" font-family="Outfit" font-size="12" font-weight="bold" fill="#38bdf8" text-anchor="middle">NaOCl 儲藥桶</text>
-                <text x="65" y="45" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">次氯酸鈉 (12%)</text>
-                
-                <!-- 泵浦與管道 -->
-                <circle cx="65" cy="180" r="22" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
-                <path d="M 55 170 L 75 190 M 75 170 L 55 190" stroke="#38bdf8" stroke-width="2" id="anim-cg-pump-naocl"/>
-                <text x="65" y="215" font-family="Outfit" font-size="11" fill="#38bdf8" text-anchor="middle" font-weight="bold">NaOCl 加藥泵</text>
-                <path d="M 65 202 L 65 280 L 260 280" fill="none" stroke="#38bdf8" stroke-width="4" stroke-dasharray="6,4"/>
-
-                <!-- 加藥滴滴動畫 -->
-                <circle id="droplet-naocl" cx="260" cy="280" r="5" fill="#38bdf8" class="drop-anim"/>
-              </g>
-
-              <!-- 右側：亞硫酸氫鈉 (NaHSO3) 減氯劑桶與中和泵 -->
-              <g transform="translate(830, 40)">
-                <rect x="0" y="0" width="130" height="150" fill="url(#cgNaHSO3Grad)" rx="8" stroke="#34d399" stroke-width="2"/>
-                <rect x="10" y="10" width="110" height="24" fill="rgba(15,23,42,0.7)" rx="4"/>
-                <text x="65" y="27" font-family="Outfit" font-size="12" font-weight="bold" fill="#34d399" text-anchor="middle">NaHSO₃ 脫氯桶</text>
-                <text x="65" y="45" font-family="Outfit" font-size="10" fill="#e2e8f0" text-anchor="middle">亞硫酸氫鈉 (中和)</text>
-
-                <!-- 泵浦與管道 -->
-                <circle cx="65" cy="180" r="22" fill="#1e293b" stroke="#34d399" stroke-width="2"/>
-                <path d="M 55 170 L 75 190 M 75 170 L 55 190" stroke="#34d399" stroke-width="2" id="anim-cg-pump-nahso3"/>
-                <text x="65" y="215" font-family="Outfit" font-size="11" fill="#34d399" text-anchor="middle" font-weight="bold">NaHSO₃ 減氯泵</text>
-                <path d="M 65 202 L 65 280 L -110 280" fill="none" stroke="#34d399" stroke-width="4" stroke-dasharray="6,4"/>
-
-                <!-- 中和滴滴動畫 -->
-                <circle id="droplet-nahso3" cx="720" cy="280" r="5" fill="#34d399" class="drop-anim"/>
-              </g>
-
-              <!-- 中央：原水進水管道 -->
-              <g transform="translate(420, 20)">
-                <rect x="0" y="0" width="160" height="30" fill="#1e293b" stroke="#64748b" stroke-width="2" rx="4"/>
-                <text x="80" y="20" font-family="Outfit" font-size="12" fill="#cbd5e1" font-weight="bold" text-anchor="middle">原水進流 (Raw Water)</text>
-                <path d="M 80 30 L 80 120" stroke="#0284c7" stroke-width="8" id="cg-inflow-pipe"/>
-              </g>
-
-              <!-- 中央核心：動態反應混合槽 (Reaction Tank) -->
-              <g transform="translate(250, 120)">
-                <rect id="cg-tank-water" x="0" y="0" width="500" height="260" fill="url(#cgWaterNormal)" stroke="#00f2fe" stroke-width="3" rx="12"/>
-                <rect x="0" y="0" width="500" height="30" fill="rgba(15,23,42,0.7)"/>
-                <text x="250" y="21" font-family="Outfit" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">加氯 / 減氯化學混合反應槽 (Disinfection Tank)</text>
-
-                <!-- 攪拌機動態 (Mixer Impeller) -->
-                <rect x="245" y="30" width="10" height="140" fill="#64748b"/>
-                <g id="cg-mixer-blades" transform="translate(250, 170)">
-                  <ellipse cx="0" cy="0" rx="45" ry="10" fill="#38bdf8" opacity="0.8"/>
-                </g>
-
-                <!-- 電極探針 1: DPD 餘氯/ORP 探針 -->
-                <rect x="80" y="60" width="16" height="120" fill="#334155" rx="3"/>
-                <rect x="74" y="180" width="28" height="30" fill="#00f2fe" rx="4"/>
-                <text x="88" y="225" font-family="Outfit" font-size="10" fill="#00f2fe" font-weight="bold" text-anchor="middle">Cl₂ / ORP 探針</text>
-                <text x="88" y="240" font-family="Outfit" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle" id="cg-svg-chlorine-val">0.58 mg/L</text>
-
-                <!-- 電極探針 2: pH 探針 -->
-                <rect x="400" y="60" width="16" height="120" fill="#334155" rx="3"/>
-                <rect x="394" y="180" width="28" height="30" fill="#10b981" rx="4"/>
-                <text x="408" y="225" font-family="Outfit" font-size="10" fill="#10b981" font-weight="bold" text-anchor="middle">pH 探針</text>
-                <text x="408" y="240" font-family="Outfit" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle" id="cg-svg-ph-val">7.35 pH</text>
-
-                <!-- 反應槽內氣泡與水流波動粒子 -->
-                <circle cx="180" cy="200" r="4" fill="#ffffff" class="air-bubble-pulse"/>
-                <circle cx="320" cy="190" r="5" fill="#ffffff" class="air-bubble-pulse"/>
-                <circle cx="220" cy="140" r="3" fill="#ffffff" class="air-bubble-pulse"/>
-              </g>
-
-              <!-- 右下方：清水出水閥 -->
-              <g transform="translate(750, 340)">
-                <path d="M 0 40 L 100 40 L 100 90" fill="none" stroke="#06b6d4" stroke-width="8"/>
-                <text x="50" y="30" font-family="Outfit" font-size="11" fill="#06b6d4" font-weight="bold" text-anchor="middle">淨化出水至清水池</text>
-              </g>
-            </svg>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-flask-vial text-green"></i> NIEA 標準 DPD 檢測與線上 ORP 對數迴歸校準 (環工系水質分析)</div>
+            </div>
+            <div class="grid-2col">
+              <div>
+                <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.7rem;">
+                  輸入 NIEA DPD 自由有效餘氯 (mg/L) 與線上 ORP (mV)，即時重算對數迴歸方程式與 R²：
+                </p>
+                <div style="display: flex; gap: 0.45rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                  <input type="number" id="input-dpd-val" class="form-input" placeholder="餘氯 mg/L" step="0.01" style="width: 110px;">
+                  <input type="number" id="input-orp-val" class="form-input" placeholder="ORP mV" step="1" style="width: 105px;">
+                  <button class="industrial-btn green sm" id="btn-add-dpd-point"><i class="fa-solid fa-plus"></i> 新增點</button>
+                  <button class="industrial-btn amber sm" id="btn-reset-dpd-points"><i class="fa-solid fa-rotate-left"></i> 重置</button>
+                </div>
+                <div style="font-family: var(--font-code); font-size: 0.82rem; color: var(--primary-cyan); background: rgba(0,0,0,0.35); padding: 0.75rem; border-radius: 8px;">
+                  動態最小平方法迴歸方程式:<br>
+                  <strong id="equation-text">ORP (mV) = 145.2 × ln(DPD) + 788.4</strong><br>
+                  <span style="color: var(--accent-green);" id="r2-score-text">決定係數 R² = 0.9965 (高度相關)</span>
+                </div>
+              </div>
+              <div style="position: relative; height: 185px;">
+                <canvas id="chartRegression"></canvas>
+              </div>
+            </div>
           </div>
 
-          <!-- 即時控制面板與動態滑桿 -->
-          <div style="margin-top: 1rem; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 10px; border: 1px solid var(--border-color);">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 0.8rem;">
-              
-              <!-- NaOCl 加藥泵滑桿 -->
-              <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                  <label style="font-size: 0.85rem; color: #38bdf8; font-weight: 700;">
-                    <i class="fa-solid fa-plus-circle"></i> 次氯酸鈉 NaOCl 加藥量：
-                  </label>
-                  <span style="font-family: var(--font-code); font-size: 0.95rem; font-weight: 800; color: #38bdf8;" id="cg-val-naocl-rate">35 mL/min</span>
-                </div>
-                <input type="range" id="cg-slider-naocl" min="0" max="100" value="35" style="width: 100%; accent-color: #38bdf8; cursor: pointer;">
-              </div>
-
-              <!-- NaHSO3 脫氯中和泵滑桿 -->
-              <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                  <label style="font-size: 0.85rem; color: #34d399; font-weight: 700;">
-                    <i class="fa-solid fa-minus-circle"></i> 亞硫酸氫鈉 NaHSO₃ 脫氯量：
-                  </label>
-                  <span style="font-family: var(--font-code); font-size: 0.95rem; font-weight: 800; color: #34d399;" id="cg-val-nahso3-rate">0 mL/min</span>
-                </div>
-                <input type="range" id="cg-slider-nahso3" min="0" max="100" value="0" style="width: 100%; accent-color: #34d399; cursor: pointer;">
-              </div>
-
-            </div>
-
-            <!-- 原水流量與有機物負擔控制 -->
-            <div style="display: flex; gap: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 200px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                  <span style="font-size: 0.8rem; color: #94a3b8;">原水進水流量 (Inflow):</span>
-                  <span style="font-family: var(--font-code); font-size: 0.85rem; color: #fff;" id="cg-val-inflow">50 L/min</span>
-                </div>
-                <input type="range" id="cg-slider-inflow" min="10" max="100" value="50" style="width: 100%; accent-color: #06b6d4;">
-              </div>
-
-              <div>
-                <button class="industrial-btn red" id="btn-cg-toggle-organic" style="padding: 0.5rem 1rem; font-size: 0.8rem;">
-                  <i class="fa-solid fa-cloud-rain"></i> 觸發暴雨有機物飆升 (Spike Organic Demand)
-                </button>
-              </div>
-            </div>
-
-            <!-- 總游離有效餘氯 (Total Free Chlorine) 微調與動態連動 -->
-            <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                <label style="font-size: 0.85rem; color: var(--primary-cyan); font-weight: 700;">
-                  <i class="fa-solid fa-droplet"></i> 總游離有效餘氯微調 (Total Free Chlorine):
-                </label>
-                <span style="font-family: var(--font-code); font-size: 1.1rem; font-weight: 800; color: var(--primary-cyan);" id="speciation-dose-val">0.60 mg/L</span>
-              </div>
-              <input type="range" id="slider-speciation-dose" min="0.10" max="3.00" step="0.05" value="0.60" style="width: 100%; accent-color: var(--primary-cyan); cursor: pointer;">
-            </div>
-
-            <!-- 酸鹼 (HCl / NaOH) 滴定微調與 pH 動態連動 -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15);">
-              <!-- 滴定加酸 HCl -->
-              <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                  <label style="font-size: 0.8rem; color: #f97316; font-weight: 700;">
-                    <i class="fa-solid fa-flask"></i> 滴定加酸 (HCl 降 pH):
-                  </label>
-                  <span style="font-family: var(--font-code); font-size: 0.85rem; color: #f97316;" id="spec-val-hcl-dose">0.0 mL/min</span>
-                </div>
-                <input type="range" id="slider-spec-hcl" min="0" max="50" step="0.5" value="0" style="width: 100%; accent-color: #f97316; cursor: pointer;">
-              </div>
-
-              <!-- 滴定加鹼 NaOH -->
-              <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                  <label style="font-size: 0.8rem; color: #3b82f6; font-weight: 700;">
-                    <i class="fa-solid fa-flask"></i> 滴定加鹼 (NaOH 升 pH):
-                  </label>
-                  <span style="font-family: var(--font-code); font-size: 0.85rem; color: #3b82f6;" id="spec-val-naoh-dose">0.0 mL/min</span>
-                </div>
-                <input type="range" id="slider-spec-naoh" min="0" max="50" step="0.5" value="0" style="width: 100%; accent-color: #3b82f6; cursor: pointer;">
-              </div>
-            </div>
-
-            <!-- 酸鹼滴定快速按鈕與 pH 直覺微調 -->
-            <div style="display: flex; gap: 0.5rem; margin-top: 0.6rem; flex-wrap: wrap; align-items: center;">
-              <button class="industrial-btn amber" id="btn-titrate-hcl" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">
-                <i class="fa-solid fa-plus"></i> 加酸 +5 mL/min
-              </button>
-              <button class="industrial-btn blue" id="btn-titrate-naoh" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">
-                <i class="fa-solid fa-plus"></i> 加鹼 +5 mL/min
-              </button>
-              <button class="industrial-btn" id="btn-titrate-reset" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: rgba(255,255,255,0.1); color: #fff;">
-                <i class="fa-solid fa-rotate-left"></i> 重置酸鹼
-              </button>
-              <button class="industrial-btn green" id="btn-ph-challenge" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; margin-left: auto;">
-                <i class="fa-solid fa-award"></i> pH 區間化學挑戰
-              </button>
-            </div>
-
-            <!-- 直覺式當前 pH 滑桿 -->
-            <div style="margin-top: 0.8rem;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                <span style="font-size: 0.8rem; color: #94a3b8;">當前水體即時 pH 值:</span>
-                <strong style="font-family: var(--font-code); font-size: 0.95rem; color: #10b981;" id="speciation-ph-val">7.20 pH</strong>
-              </div>
-              <input type="range" id="slider-speciation-ph" min="4.0" max="10.0" step="0.1" value="7.2" style="width: 100%; accent-color: #10b981; cursor: pointer;">
-            </div>
-          </div>
         </div>
 
-        <!-- 右欄：即時水質監測卡與 Chart.js 2D 動態趨勢圖 -->
-        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-          
-          <!-- 水質指標卡 4 連抽 -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
-            
-            <div class="metric-card green" id="card-cg-chlorine">
-              <div class="metric-label">自由有效餘氯 Free Cl₂</div>
-              <div class="metric-value" id="cg-metric-chlorine">0.58 <span class="metric-unit">mg/L</span></div>
-              <div class="metric-sub" id="cg-sub-chlorine">法規合格 (0.2 ~ 1.0 mg/L)</div>
-            </div>
+        <!-- 右欄：PBL 闖關 + ESG & SROI 計算器 -->
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
 
-            <div class="metric-card cyan" id="card-cg-orp">
-              <div class="metric-label">氧化還原電位 ORP</div>
-              <div class="metric-value" id="cg-metric-orp">710 <span class="metric-unit">mV</span></div>
-              <div class="metric-sub" id="cg-sub-orp">極佳消毒能力 (> 650mV)</div>
-            </div>
-
-            <div class="metric-card purple" id="card-cg-thm">
-              <div class="metric-label">THMs 消毒副產物風險</div>
-              <div class="metric-value" id="cg-metric-thm">8 <span class="metric-unit">ppb</span></div>
-              <div class="metric-sub" id="cg-sub-thm">安全標準 (&lt; 80 ppb)</div>
-            </div>
-
-            <div class="metric-card green" id="card-cg-pathogen">
-              <div class="metric-label">大腸桿菌與病原防護</div>
-              <div class="metric-value" id="cg-metric-pathogen">99.99 <span class="metric-unit">%</span></div>
-              <div class="metric-sub" id="cg-sub-pathogen">完全滅菌防護</div>
-            </div>
-
+          <div class="card pbl-badge-card">
+            <div class="badge-icon"><i class="fa-solid fa-award"></i></div>
+            <h3 style="color: #fff; margin-bottom: 0.35rem;">PBL 3D 智慧水務工程師闖關挑戰</h3>
+            <p style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.9rem;">
+              實戰情境：「大雨過後原水有機物暴增」，請立即進入 3D 加氯/減氯實驗室調整 NaOCl 與 pH 滴定，解除餘氯不足警報！
+            </p>
+            <button class="industrial-btn amber" id="btn-start-pbl-challenge">
+              <i class="fa-solid fa-gamepad"></i> 啟動 3D PBL 暴雨闖關挑戰
+            </button>
           </div>
 
-          <!-- 物種解離與相對殺菌力 3 連抽卡片 -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
-            <div class="metric-card cyan" style="padding: 0.7rem;">
-              <div class="metric-label" style="font-size: 0.72rem;">[HOCl] 次氯酸 (強殺菌)</div>
-              <div class="metric-value" style="font-size: 1.1rem;" id="spec-val-hocl">0.41 <span class="metric-unit">mg/L</span></div>
-              <div class="metric-sub" style="font-size: 0.7rem; color: var(--primary-cyan);" id="spec-pct-hocl">佔比 68.1%</div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-calculator text-purple"></i> ESG 淨零減碳與 SROI 社會價值計算器</div>
+              <select id="sroi-preset-select" class="form-select" style="color: var(--primary-cyan);">
+                <option value="baseline">基準計畫估算 (SROI 2.85)</option>
+                <option value="conservative">保守防禦估算 (SROI 1.80)</option>
+                <option value="optimistic">高效益擴充 (SROI 3.60)</option>
+                <option value="custom">-- 自訂微調數據 --</option>
+              </select>
             </div>
 
-            <div class="metric-card green" style="padding: 0.7rem;">
-              <div class="metric-label" style="font-size: 0.72rem;">[OCl⁻] 次氯酸根 (弱殺菌)</div>
-              <div class="metric-value" style="font-size: 1.1rem;" id="spec-val-ocl">0.19 <span class="metric-unit">mg/L</span></div>
-              <div class="metric-sub" style="font-size: 0.7rem; color: var(--accent-green);" id="spec-pct-ocl">佔比 31.9%</div>
-            </div>
-
-            <div class="metric-card purple" style="padding: 0.7rem;">
-              <div class="metric-label" style="font-size: 0.72rem;">相對殺菌效能指數</div>
-              <div class="metric-value" style="font-size: 1.1rem;" id="spec-val-power">68.5 <span class="metric-unit">%</span></div>
-              <div class="metric-sub" style="font-size: 0.7rem;" id="spec-sub-power">黃金最佳消毒區</div>
-            </div>
-          </div>
-
-          <!-- Chart.js 1: 動態趨勢圖卡片 -->
-          <div class="card" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-            <div class="card-header" style="margin-bottom: 0.5rem;">
-              <div class="card-title">
-                <i class="fa-solid fa-chart-line text-cyan"></i> 即時水質與加/減氯反應動態時序曲線
+            <div class="grid-2col" style="gap: 0.7rem; margin-bottom: 1rem; background: rgba(0,0,0,0.22); padding: 0.8rem; border-radius: 9px;">
+              <div>
+                <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">總資本投入 (NTD):</label>
+                <input type="number" id="sroi-input-capital" class="form-input" value="420000" step="10000" style="width: 100%;">
               </div>
-              <span style="font-size: 0.75rem; color: #94a3b8;">每秒動態刷新</span>
+              <div>
+                <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">避免法規裁罰 (NTD):</label>
+                <input type="number" id="sroi-input-fines" class="form-input" value="300000" step="10000" style="width: 100%;">
+              </div>
+              <div>
+                <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">藥劑與用電節約 (NTD):</label>
+                <input type="number" id="sroi-input-savings" class="form-input" value="120000" step="5000" style="width: 100%;">
+              </div>
+              <div>
+                <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">泵浦延壽保養 (NTD):</label>
+                <input type="number" id="sroi-input-maintenance" class="form-input" value="80000" step="5000" style="width: 100%;">
+              </div>
+              <div style="grid-column: span 2;">
+                <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">學生薪資溢價與產學衍生價值 (NTD):</label>
+                <input type="number" id="sroi-input-student" class="form-input" value="700000" step="20000" style="width: 100%;">
+              </div>
             </div>
 
-            <div style="position: relative; height: 170px; width: 100%;">
-              <canvas id="chartChlorineGame"></canvas>
+            <div style="background: rgba(139, 92, 246, 0.16); padding: 0.95rem; border-radius: 10px; border: 1px solid var(--accent-purple); text-align: center; margin-bottom: 0.8rem;">
+              <div style="font-size: 0.78rem; color: #d8b4fe;">即時計算 SROI 社會投資報酬率</div>
+              <div style="font-size: 2rem; font-weight: 800; color: #fff; font-family: var(--font-code);" id="sroi-ratio-display">SROI = 2.86 : 1</div>
+              <div style="font-size: 0.78rem; color: var(--accent-green);" id="sroi-status-text">🌟 卓越評等：每投入 1 元資本，創造 2.86 元社會成效</div>
             </div>
 
-            <!-- 綠色法規區間標示說明 -->
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #94a3b8; background: rgba(0,0,0,0.2); padding: 0.4rem 0.8rem; border-radius: 6px; margin-top: 0.5rem;">
-              <div><i class="fa-solid fa-square text-green"></i> 法規目標區間：0.2 ~ 1.0 mg/L</div>
-              <div><i class="fa-solid fa-square text-cyan"></i> 最佳平衡目標：0.5 ~ 0.8 mg/L</div>
-            </div>
-          </div>
-
-          <!-- Chart.js 2: pH 熱力學物種解離與動態濃度曲線圖卡片 -->
-          <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-              <span style="font-size: 0.85rem; font-weight: 700; color: #fff;">
-                <i class="fa-solid fa-chart-area text-purple"></i> pH 熱力學物種解離與動態濃度曲線 (Speciation Curve, pKₐ=7.53)
-              </span>
-              <span class="status-badge" style="font-size: 0.7rem; background: rgba(139, 92, 246, 0.2); color: #c084fc; border-color: #8b5cf6;" id="speciation-zone-tag">
-                黃金消毒區 (pH 6.5 ~ 7.5)
-              </span>
-            </div>
-
-            <div style="position: relative; height: 170px; width: 100%;">
-              <canvas id="chartPhSpeciation"></canvas>
-            </div>
-
-            <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.3rem; display: flex; justify-content: space-between; align-items: center;">
-              <span><i class="fa-solid fa-circle" style="color:#00f2fe;"></i> HOCl 次氯酸濃度 (mg/L)</span>
-              <span><i class="fa-solid fa-circle" style="color:#10b981;"></i> OCl⁻ 次氯酸根濃度 (mg/L)</span>
-              <span><i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> 當前 pH 追蹤游標</span>
+            <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; border-left: 3px solid var(--accent-green); display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 0.72rem; color: #94a3b8;">總社會產出效益 (Outcomes)</div>
+                <div style="font-size: 1.08rem; font-weight: 700; color: var(--accent-green);" id="sroi-total-outcomes">NT$ 1,200,000</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.72rem; color: #94a3b8;">ESG 節藥 / 節電評估</div>
+                <div style="font-size: 0.86rem; font-weight: 600; color: var(--primary-cyan);" id="sroi-esg-rates">節藥 20% | 節電 17%</div>
+              </div>
             </div>
           </div>
 
         </div>
 
       </div>
+    </div>
+
   </main>
 
-  <!-- Application JavaScript -->
+  <!-- 3D Engine & Core Application Logic -->
+  <script src="three-scenes.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
