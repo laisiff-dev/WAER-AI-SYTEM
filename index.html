@@ -376,6 +376,25 @@
                   <span class="slider"></span>
                 </label>
               </div>
+
+              <!-- 雙泵快速切換與自動輪換列 -->
+              <div style="margin-top: 0.7rem; padding-top: 0.65rem; border-top: 1px dashed rgba(255,255,255,0.12); display: flex; flex-direction: column; gap: 0.55rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                  <button class="industrial-btn green sm" id="btn-swap-pump-ab">
+                    <i class="fa-solid fa-repeat"></i> 立即交替切換 A ⇄ B
+                  </button>
+                  <button class="industrial-btn purple sm" id="btn-run-both-pumps">
+                    <i class="fa-solid fa-fan"></i> 雙泵 A+B 同時運轉
+                  </button>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: #cbd5e1; background: rgba(0,242,254,0.06); padding: 0.35rem 0.6rem; border-radius: 6px;">
+                  <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer;">
+                    <input type="checkbox" id="cfg-auto-alternate" checked style="accent-color: var(--primary-cyan);">
+                    <span>AUTO 自動定時輪換 A ⇄ B</span>
+                  </label>
+                  <strong style="font-family: var(--font-code); color: var(--primary-cyan);" id="auto-alt-countdown">12s 後切換</strong>
+                </div>
+              </div>
             </div>
 
             <!-- DI 數位輸入模擬與快速操作 -->

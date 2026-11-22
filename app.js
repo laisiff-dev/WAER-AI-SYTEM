@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
     hoursPumpA: 142.5,
     hoursPumpB: 139.2,
     lastActivePump: 'A',
+    autoAlternateEnabled: true,
+    autoAlternateSec: 12,
     isModbusStreaming: true,
 
     // 餘氯不足 ALARM 告警系統狀態
@@ -770,6 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 計算各單元用電與評估餘氯警報
     evaluateUnitEnergy();
     evaluateChlorineAlarm();
+    updateAutoAltCountdownUI();
 
     // 頂部 KPI
     document.getElementById('val-sed-ph').innerHTML = `${state.sedimentationPh.toFixed(2)} <span class="metric-unit">pH</span>`;
@@ -874,17 +877,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function alternatePumpAB(reason) {
+    const aRunning = state.pumpAStatus === 'RUNNING';
+    const bRunning = state.pumpBStatus === 'RUNNING';
+    if (aRunning && !bRunning) {
+      state.pumpAStatus = 'STOPPED';
+      state.pumpBStatus = 'RUNNING';
+      state.lastActivePump = 'B';
+    } else if (bRunning && !aRunning) {
+      state.pumpAStatus = 'RUNNING';
+      state.pumpBStatus = 'STOPPED';
+      state.lastActivePump = 'A';
+    } else {
+      // Both stopped or both running -> alternate from lastActivePump
+      if (state.lastActivePump === 'A') {
+        state.pumpAStatus = 'STOPPED';
+        state.pumpBStatus = 'RUNNING';
+        state.lastActivePump = 'B';
+      } else {
+        state.pumpAStatus = 'RUNNING';
+        state.pumpBStatus = 'STOPPED';
+        state.lastActivePump = 'A';
+      }
+    }
+    if (state.ctrlMode === 'AUTO') {
+      state.dosingPumpStatus = 'RUNNING';
+    }
+    state.autoAlternateSec = 12;
+    addEventLog('AUTO_LOGIC', `${reason}：已切換為砂濾泵 ${state.lastActivePump} (${state.lastActivePump === 'A' ? '左側' : '右側'}) 運轉。`);
+    syncUI();
+  }
+
   document.getElementById('ctrl-relay-1')?.addEventListener('change', (e) => {
     handleManualRelayOverride('Relay 1 砂濾泵 A');
     state.pumpAStatus = e.target.checked ? 'RUNNING' : 'STOPPED';
+    if (state.pumpAStatus === 'RUNNING') state.lastActivePump = 'A';
     syncUI();
   });
 
   document.getElementById('ctrl-relay-2')?.addEventListener('change', (e) => {
     handleManualRelayOverride('Relay 2 砂濾泵 B');
     state.pumpBStatus = e.target.checked ? 'RUNNING' : 'STOPPED';
+    if (state.pumpBStatus === 'RUNNING') state.lastActivePump = 'B';
     syncUI();
   });
+
+  document.getElementById('btn-swap-pump-ab')?.addEventListener('click', () => {
+    alternatePumpAB('操作員手動觸發雙泵交替');
+  });
+
+  document.getElementById('btn-run-both-pumps')?.addEventListener('click', () => {
+    handleManualRelayOverride('雙泵 A+B 同時運轉');
+    state.pumpAStatus = 'RUNNING';
+    state.pumpBStatus = 'RUNNING';
+    state.dosingPumpStatus = 'RUNNING';
+    addEventLog('INFO', '啟動砂濾泵 A (左) + 砂濾泵 B (右) 雙泵並聯滿載運轉！');
+    syncUI();
+  });
+
+  document.getElementById('cfg-auto-alternate')?.addEventListener('change', (e) => {
+    state.autoAlternateEnabled = e.target.checked;
+    state.autoAlternateSec = 12;
+    updateAutoAltCountdownUI();
+  });
+
+  function updateAutoAltCountdownUI() {
+    const el = document.getElementById('auto-alt-countdown');
+    if (!el) return;
+    if (state.ctrlMode !== 'AUTO') {
+      el.textContent = 'MANUAL 手動中';
+      el.style.color = '#fbbf24';
+    } else if (!state.autoAlternateEnabled) {
+      el.textContent = '定時輪換已停用';
+      el.style.color = '#94a3b8';
+    } else if (state.pumpAStatus !== 'RUNNING' && state.pumpBStatus !== 'RUNNING') {
+      el.textContent = '待機中';
+      el.style.color = '#94a3b8';
+    } else {
+      const nextPump = state.pumpAStatus === 'RUNNING' ? 'B' : 'A';
+      el.textContent = `${state.autoAlternateSec}s 後換泵 ${nextPump}`;
+      el.style.color = 'var(--primary-cyan)';
+    }
+  }
 
   document.getElementById('ctrl-relay-3')?.addEventListener('change', (e) => {
     handleManualRelayOverride('Relay 3 次氯酸鈉加藥泵');
@@ -900,12 +974,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-sim-low-level')?.addEventListener('click', () => {
     state.cleanWaterLevel = 'LOW';
+    if (state.ctrlMode !== 'AUTO') {
+      state.ctrlMode = 'AUTO';
+      updateModeButtonsUI();
+    }
     addEventLog('INFO', 'DI1 浮球開關觸發：清水池水位過低！');
     runControlLogic();
   });
 
   document.getElementById('btn-sim-high-level')?.addEventListener('click', () => {
     state.cleanWaterLevel = 'HIGH';
+    if (state.ctrlMode !== 'AUTO') {
+      state.ctrlMode = 'AUTO';
+      updateModeButtonsUI();
+    }
     addEventLog('INFO', 'DI1 浮球開關觸發：清水池滿水上限！');
     runControlLogic();
   });
@@ -947,21 +1029,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (state.ctrlMode === 'AUTO') {
       if (state.cleanWaterLevel === 'LOW') {
-        if (state.lastActivePump === 'A') {
-          state.pumpAStatus = 'STOPPED';
-          state.pumpBStatus = 'RUNNING';
-          state.lastActivePump = 'B';
-        } else {
-          state.pumpAStatus = 'RUNNING';
-          state.pumpBStatus = 'STOPPED';
-          state.lastActivePump = 'A';
-        }
         state.cleanWaterLevel = 'NORMAL';
-        addEventLog('AUTO_LOGIC', `清水池低水位，DO4 自動交替啟動砂濾泵 ${state.lastActivePump} 並連動加藥。`);
+        alternatePumpAB('清水池低水位 DI1 自動觸發交替');
+        return;
       } else if (state.cleanWaterLevel === 'HIGH') {
         state.pumpAStatus = 'STOPPED';
         state.pumpBStatus = 'STOPPED';
         addEventLog('AUTO_LOGIC', '清水池達高水位上限，DO4 自動停泵節能。');
+      } else if (state.autoAlternateEnabled && (state.pumpAStatus === 'RUNNING' || state.pumpBStatus === 'RUNNING')) {
+        state.autoAlternateSec -= 2;
+        if (state.autoAlternateSec <= 0) {
+          alternatePumpAB('AUTO 定時均時輪換');
+          return;
+        }
       }
 
       // Dosing pump interlock with flow OR low-chlorine protection
@@ -971,6 +1051,8 @@ document.addEventListener('DOMContentLoaded', () => {
         state.dosingPumpStatus = 'STOPPED';
       }
     }
+
+    updateAutoAltCountdownUI();
 
     // Running hours accumulation
     if (state.pumpAStatus === 'RUNNING') state.hoursPumpA += 2 / 3600;

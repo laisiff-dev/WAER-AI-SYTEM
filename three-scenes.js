@@ -377,61 +377,98 @@
     }
 
     _buildFilterAndPumps() {
-      // Two cylindrical Sand Filter Vessels behind pumps
-      const filterMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, metalness: 0.55, roughness: 0.35 });
-      const capMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.7, roughness: 0.25 });
-
-      [-1.7, 1.7].forEach((fx) => {
-        const vessel = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.82, 2.6, 20), filterMat);
+      // Two cylindrical Sand Filter Vessels behind pumps (Left = Filter A, Right = Filter B)
+      const makeFilter = (fx) => {
+        const vesselMat = new THREE.MeshStandardMaterial({
+          color: 0x1e3a8a,
+          emissive: 0x0284c7,
+          emissiveIntensity: 0.15,
+          metalness: 0.55,
+          roughness: 0.35
+        });
+        const vessel = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.82, 2.6, 20), vesselMat);
         vessel.position.set(fx, 1.5, 0.3);
         vessel.castShadow = true;
         this.scene.add(vessel);
 
+        const capMat = new THREE.MeshStandardMaterial({
+          color: 0x38bdf8,
+          emissive: 0x00f2fe,
+          emissiveIntensity: 0.2,
+          metalness: 0.7,
+          roughness: 0.25
+        });
         const dome = new THREE.Mesh(new THREE.SphereGeometry(0.82, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), capMat);
         dome.position.set(fx, 2.8, 0.3);
         this.scene.add(dome);
-      });
 
-      // Sand Filter Pump A & B
+        return { vesselMat, capMat };
+      };
+
+      this.filterA = makeFilter(-1.8);
+      this.filterB = makeFilter(1.8);
+
+      // Sand Filter Pump A (Left) & Pump B (Right) — Forward-facing (+Z) impellers & top beacons
       const makePump = (x, z) => {
         const g = new THREE.Group();
         g.position.set(x, 0.25, z);
 
         const base = new THREE.Mesh(
-          new THREE.BoxGeometry(1.5, 0.25, 1.1),
+          new THREE.BoxGeometry(1.7, 0.28, 1.35),
           new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7 })
         );
-        base.position.y = 0.125;
+        base.position.y = 0.14;
         g.add(base);
 
-        const motor = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.45, 0.45, 1.15, 18),
-          new THREE.MeshStandardMaterial({ color: 0x0f766e, metalness: 0.6, roughness: 0.3 })
-        );
-        motor.rotation.z = Math.PI / 2;
-        motor.position.set(0, 0.72, 0);
+        // Horizontal pump body oriented along Z so impeller faces the viewer (+Z)
+        const motorMat = new THREE.MeshStandardMaterial({
+          color: 0x0f766e,
+          emissive: 0x10b981,
+          emissiveIntensity: 0.35,
+          metalness: 0.55,
+          roughness: 0.3
+        });
+        const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.52, 1.15, 22), motorMat);
+        motor.rotation.x = Math.PI / 2;
+        motor.position.set(0, 0.82, -0.05);
         g.add(motor);
 
-        // Status glowing ring
+        // Front glowing status ring facing +Z (clearly visible for both A and B)
         const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.06, 10, 24), ringMat);
-        ring.rotation.y = Math.PI / 2;
-        ring.position.set(0.6, 0.72, 0);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.08, 12, 28), ringMat);
+        ring.position.set(0, 0.82, 0.55);
         g.add(ring);
 
-        // Spinning Impeller Blades on front
+        // Front spinning impeller blades facing +Z
         const impeller = new THREE.Group();
-        impeller.position.set(0.62, 0.72, 0);
-        const bladeMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.6 });
+        impeller.position.set(0, 0.82, 0.62);
+        const bladeMat = new THREE.MeshStandardMaterial({
+          color: 0x00f2fe,
+          emissive: 0x00f2fe,
+          emissiveIntensity: 0.75
+        });
         for (let i = 0; i < 4; i++) {
-          const b = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.72, 0.12), bladeMat);
-          b.rotation.x = (i * Math.PI) / 4;
+          const b = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.92, 0.08), bladeMat);
+          b.rotation.z = (i * Math.PI) / 4;
           impeller.add(b);
         }
+        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.12, 12), bladeMat);
+        hub.rotation.x = Math.PI / 2;
+        impeller.add(hub);
         g.add(impeller);
 
+        // Top glowing indicator lamp on motor housing
+        const lampMat = new THREE.MeshStandardMaterial({
+          color: 0x10b981,
+          emissive: 0x10b981,
+          emissiveIntensity: 0.9
+        });
+        const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), lampMat);
+        lamp.position.set(0, 1.48, 0);
+        g.add(lamp);
+
         this.scene.add(g);
-        return { group: g, motorMat: motor.material, ringMat, impeller };
+        return { group: g, baseY: 0.25, motorMat, ringMat, bladeMat, lampMat, impeller };
       };
 
       this.pumpA = makePump(-1.8, 3.0);
@@ -544,28 +581,31 @@
     }
 
     _buildPipesAndFlows() {
-      // Water main pipes: Sedimentation -> Pumps -> Sand Filters -> Clean Water
-      const p1 = createPipe([[5.7, 1.0, 2.8], [3.5, 1.0, 3.0], [1.8, 0.9, 3.0], [-1.8, 0.9, 3.0]], 0.16, 0x38bdf8, 0.55);
-      const p2 = createPipe([[-1.8, 1.2, 2.4], [-1.7, 2.2, 0.3], [-4.5, 2.2, 0.3], [-5.7, 2.2, 1.2]], 0.16, 0x00f2fe, 0.6);
-      const p3 = createPipe([[1.8, 1.2, 2.4], [1.7, 2.2, 0.3], [-1.7, 2.2, 0.3]], 0.15, 0x00f2fe, 0.55);
+      // Independent water pipe paths for Intake, Branch A (Left Pump/Filter), Branch B (Right Pump/Filter), and Dosing
+      const pIntake = createPipe([[5.7, 1.0, 2.8], [3.6, 1.0, 3.0], [1.8, 0.9, 3.0]], 0.16, 0x38bdf8, 0.55);
+      const pManifoldA = createPipe([[1.8, 0.9, 3.0], [0.0, 0.9, 3.0], [-1.8, 0.9, 3.0]], 0.15, 0x38bdf8, 0.55);
+      const pBranchA = createPipe([[-1.8, 1.2, 2.4], [-1.8, 2.2, 0.3], [-4.2, 2.2, 0.3], [-5.7, 2.2, 1.2]], 0.16, 0x00f2fe, 0.62);
+      const pBranchB = createPipe([[1.8, 1.2, 2.4], [1.8, 2.2, 0.3], [0.0, 2.55, 0.3], [-4.2, 2.55, 0.3], [-5.7, 2.2, 1.2]], 0.16, 0x10b981, 0.62);
       // Dosing feed pipe
       const pDose = createPipe([[-4.3, 2.2, 3.8], [-4.3, 2.5, 1.5], [-5.8, 2.5, 1.5]], 0.08, 0xf59e0b, 0.85);
 
-      [p1, p2, p3, pDose].forEach(p => this.scene.add(p.mesh));
+      [pIntake, pManifoldA, pBranchA, pBranchB, pDose].forEach(p => this.scene.add(p.mesh));
 
-      // Animated water particles along pipes
+      // Animated water particles along each independent branch
       const addFlowSet = (curve, count, color, tag) => {
         for (let i = 0; i < count; i++) {
           const orb = new THREE.Mesh(
-            new THREE.SphereGeometry(tag === 'dose' ? 0.1 : 0.13, 8, 8),
+            new THREE.SphereGeometry(tag === 'dose' ? 0.1 : 0.14, 8, 8),
             new THREE.MeshBasicMaterial({ color })
           );
           this.scene.add(orb);
-          this.flowParticles.push({ mesh: orb, curve, t: i / count, speed: tag === 'dose' ? 0.38 : 0.28, tag });
+          this.flowParticles.push({ mesh: orb, curve, t: i / count, speed: tag === 'dose' ? 0.38 : 0.30, tag });
         }
       };
-      addFlowSet(p1.curve, 8, 0x7dd3fc, 'water');
-      addFlowSet(p2.curve, 9, 0x00f2fe, 'water');
+      addFlowSet(pIntake.curve, 5, 0x7dd3fc, 'intake');
+      addFlowSet(pManifoldA.curve, 5, 0x7dd3fc, 'pumpA');
+      addFlowSet(pBranchA.curve, 8, 0x00f2fe, 'pumpA');
+      addFlowSet(pBranchB.curve, 10, 0x34d399, 'pumpB');
       addFlowSet(pDose.curve, 5, 0xfbbf24, 'dose');
 
       // RS-485 Data Cables: HUBs -> DO4 Smart Box
@@ -623,7 +663,8 @@
         { id: 'lbl-sed', pos: new THREE.Vector3(8.5, 4.3, 1.5), html: '沉澱池 (原水)<br><strong id="hud3d-sed">pH 7.14 | 485 mV</strong>' },
         { id: 'lbl-clean', pos: new THREE.Vector3(-8.5, 4.3, 1.5), html: '清水池 (出水)<br><strong id="hud3d-clean">Cl₂ 0.58 mg/L | 710 mV</strong>' },
         { id: 'lbl-smartbox', pos: new THREE.Vector3(0, 6.4, -3.8), html: 'DO4-ABS-N Smart Box<br><strong id="hud3d-mode">AUTO 自動交替</strong>' },
-        { id: 'lbl-pumps', pos: new THREE.Vector3(0, 2.2, 3.6), html: '砂濾泵 A / B<br><strong id="hud3d-pumps">Pump A 運轉</strong>' },
+        { id: 'lbl-pump-a', pos: new THREE.Vector3(-1.8, 2.5, 3.3), html: '砂濾泵 A (左)<br><strong id="hud3d-pump-a">🟢 運轉中</strong>' },
+        { id: 'lbl-pump-b', pos: new THREE.Vector3(1.8, 2.5, 3.3), html: '砂濾泵 B (右)<br><strong id="hud3d-pump-b">⚫ 待機</strong>' },
         { id: 'lbl-dose', pos: new THREE.Vector3(-4.3, 2.9, 3.8), html: 'NaOCl 加藥系統<br><strong id="hud3d-dose">連動投藥中</strong>' }
       ];
       defs.forEach(d => {
@@ -677,13 +718,30 @@
         this.sedWaterMat.color.setHex(0x0284c7);
       }
 
-      // Pump visual indicators
+      // Pump A & B distinct visual indicators (Ring, Blades, Lamp, Motor glow & Filter vessels)
       const aRun = s.pumpAStatus === 'RUNNING';
       const bRun = s.pumpBStatus === 'RUNNING';
       const dRun = s.dosingPumpStatus === 'RUNNING';
 
-      this.pumpA.ringMat.color.setHex(aRun ? 0x10b981 : 0x475569);
-      this.pumpB.ringMat.color.setHex(bRun ? 0x10b981 : 0x475569);
+      const applyPumpStyle = (pump, filter, active, activeHex) => {
+        pump.ringMat.color.setHex(active ? activeHex : 0x475569);
+        pump.bladeMat.color.setHex(active ? activeHex : 0x64748b);
+        pump.bladeMat.emissive.setHex(active ? activeHex : 0x000000);
+        pump.bladeMat.emissiveIntensity = active ? 0.95 : 0;
+        pump.motorMat.color.setHex(active ? 0x0f766e : 0x1e293b);
+        pump.motorMat.emissive.setHex(active ? activeHex : 0x000000);
+        pump.motorMat.emissiveIntensity = active ? 0.35 : 0;
+        pump.lampMat.color.setHex(active ? 0x10b981 : 0x475569);
+        pump.lampMat.emissive.setHex(active ? 0x10b981 : 0x000000);
+        pump.lampMat.emissiveIntensity = active ? 1.2 : 0;
+        if (filter) {
+          filter.vesselMat.emissiveIntensity = active ? 0.45 : 0.04;
+          filter.capMat.emissiveIntensity = active ? 0.55 : 0.05;
+        }
+      };
+
+      applyPumpStyle(this.pumpA, this.filterA, aRun, 0x00f2fe);
+      applyPumpStyle(this.pumpB, this.filterB, bRun, 0x34d399);
       this.doseHead.material.emissiveIntensity = dRun ? 0.9 : 0.1;
 
       // 4 Relay LEDs on 3D Smart Box
@@ -701,15 +759,19 @@
       const hudSed = document.getElementById('hud3d-sed');
       const hudClean = document.getElementById('hud3d-clean');
       const hudMode = document.getElementById('hud3d-mode');
-      const hudPumps = document.getElementById('hud3d-pumps');
+      const hudPumpA = document.getElementById('hud3d-pump-a');
+      const hudPumpB = document.getElementById('hud3d-pump-b');
       const hudDose = document.getElementById('hud3d-dose');
+      const lblPumpA = document.getElementById('lbl-pump-a');
+      const lblPumpB = document.getElementById('lbl-pump-b');
 
       if (hudSed) hudSed.textContent = `pH ${s.sedimentationPh.toFixed(2)} | ${Math.round(s.sedimentationOrp)} mV`;
       if (hudClean) hudClean.textContent = `Cl₂ ${cl.toFixed(2)} mg/L | ${Math.round(s.cleanWaterOrp)} mV`;
       if (hudMode) hudMode.textContent = `${s.ctrlMode} | ${s.totalKw.toFixed(2)} kW`;
-      if (hudPumps) {
-        hudPumps.textContent = aRun && bRun ? 'A+B 雙泵運轉' : aRun ? 'Pump A 運轉中' : bRun ? 'Pump B 運轉中' : '雙泵待機';
-      }
+      if (hudPumpA) hudPumpA.textContent = aRun ? '🟢 運轉中 (2.20 kW)' : '⚫ 待機停止';
+      if (hudPumpB) hudPumpB.textContent = bRun ? '🟢 運轉中 (2.20 kW)' : '⚫ 待機停止';
+      if (lblPumpA) lblPumpA.className = 'label-3d' + (aRun ? ' green' : '');
+      if (lblPumpB) lblPumpB.className = 'label-3d' + (bRun ? ' green' : '');
       if (hudDose) hudDose.textContent = dRun ? 'NaOCl 投藥中' : '停止待機';
 
       // Highlight alarm label
@@ -737,9 +799,21 @@
 
       this.orbit.update(0.09);
 
-      // Spin active pump impellers
-      if (s.pumpAStatus === 'RUNNING') this.pumpA.impeller.rotation.x += dt * 9.5;
-      if (s.pumpBStatus === 'RUNNING') this.pumpB.impeller.rotation.x += dt * 9.5;
+      // Spin active pump impellers (+Z axis for forward-facing impellers) & subtle vibration
+      const aRunning = s.pumpAStatus === 'RUNNING';
+      const bRunning = s.pumpBStatus === 'RUNNING';
+      if (aRunning) {
+        this.pumpA.impeller.rotation.z -= dt * 11.0;
+        this.pumpA.group.position.y = this.pumpA.baseY + Math.sin(t * 28) * 0.015;
+      } else {
+        this.pumpA.group.position.y = this.pumpA.baseY;
+      }
+      if (bRunning) {
+        this.pumpB.impeller.rotation.z -= dt * 11.0;
+        this.pumpB.group.position.y = this.pumpB.baseY + Math.sin(t * 28 + 1.5) * 0.015;
+      } else {
+        this.pumpB.group.position.y = this.pumpB.baseY;
+      }
 
       // Dosing pump vibration pulse
       if (s.dosingPumpStatus === 'RUNNING') {
@@ -748,11 +822,15 @@
         this.doseHead.scale.y = 1;
       }
 
-      // Water flow particles
-      const waterActive = s.pumpAStatus === 'RUNNING' || s.pumpBStatus === 'RUNNING';
+      // Independent water flow particles per branch (Intake, Pump A left, Pump B right, Dose)
+      const anyPump = aRunning || bRunning;
       const doseActive = s.dosingPumpStatus === 'RUNNING';
       this.flowParticles.forEach(fp => {
-        const active = fp.tag === 'dose' ? doseActive : waterActive;
+        let active = false;
+        if (fp.tag === 'intake') active = anyPump;
+        else if (fp.tag === 'pumpA') active = aRunning;
+        else if (fp.tag === 'pumpB') active = bRunning;
+        else if (fp.tag === 'dose') active = doseActive;
         fp.mesh.visible = active;
         if (active) {
           fp.t = (fp.t + dt * fp.speed) % 1;
